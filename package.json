@@ -4,12 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "hardhat compile",
+    "test": "hardhat test"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "hardhat": "^2.16.0"
+    "hardhat": "^2.16.1"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.9.2"
