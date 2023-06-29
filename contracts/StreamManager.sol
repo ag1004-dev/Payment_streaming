@@ -8,6 +8,9 @@ import "./OpenStream.sol";
 contract StreamManager is IStreamManager {
     using SafeERC20 for IERC20;
 
+    /// @dev Mapping for addresses of streams instance 
+    mapping(address => address) public streams;
+
     /**
      * @dev New open stream event
      * @param _payer payer address
@@ -37,6 +40,8 @@ contract StreamManager is IStreamManager {
             _rate
         );
         address streamInstance = address(openStreamInstance);
+        /// @dev stores the address of the payee, and the address of his flow instance
+        streams[_payee] = streamInstance;
         /// @dev when creating an instance, it deposits stable coins(USDC or USDT)
         IERC20(_token).safeTransferFrom(msg.sender, streamInstance, _amount);
 
