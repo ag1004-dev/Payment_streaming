@@ -20,9 +20,9 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
     uint256 public createdAt;
     ///@dev time which the payee claimed lastly
     uint256 public lastClaimedAt;
-    ///@dev Flag indicating the contract's activation status.
+    ///@dev flag indicating the contract's activation status.
     /// If `isClaimable` is `true`, the contract is considered active and ready for use.
-    /// If `isClaimable` is `false`, the contract is considered inactive and certain functions may be disabled.
+    /// If `isClaimable` is `false`, the contract is considered to be terminated and certain functions may be disabled.
     bool public isClaimable;
 
     constructor(
@@ -49,7 +49,7 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
         return token;
     }
 
-    ///@dev it setting `toggle` on `false/true`.
+    ///@dev changes `isClaimable` status into `false/true`.
     function setClaimable(bool _isClaimable) public {
         isClaimable = _isClaimable;
     }
