@@ -9,31 +9,63 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
     using SafeERC20 for IERC20;
 
     event TokensClaimed(uint256);
+    event StreamTerminated();
 
     ///@dev admin address
     address public admin;
+    ///@dev payer address
+    address public payer;
     ///@dev payee address
     address public payee;
     ///@dev token address; USDC or USDT
     address public token;
     ///@dev monthly rate for payee
     uint256 public rate;
+    ///@dev termination period
+    uint256 public terminationPeriod;
     ///@dev time which the instance created
     uint256 public createdAt;
     ///@dev time which the payee claimed lastly
     uint256 public lastClaimedAt;
+    ///@dev time which the stream instance is terminated
+    uint256 public terminatedAt;
 
     constructor(
+        address _payer,
         address _payee,
         address _token,
-        uint256 _rate
+        uint256 _rate,
+        uint256 _terminationPeriod
     ) ReentrancyGuard() {
+        payer = _payer;
         payee = _payee;
         token = _token;
         rate = _rate;
+        terminationPeriod = _terminationPeriod;
         createdAt = block.timestamp;
         lastClaimedAt = createdAt;
         admin = msg.sender;
+    }
+
+    ///@dev check if the caller is payee
+    modifier onlyPayee {
+        require(payee == msg.sender, "OpenStream: Only payee");
+        _;
+    }
+
+    ///@dev check if the caller is payer
+    modifier onlyPayer {
+        require(payer == msg.sender, "OpenStream: Only payer");
+        _;
+    }
+
+    ///@dev check if the stream is terminated or not
+    modifier notTerminated {
+        require(
+            terminatedAt == 0 || terminatedAt != 0 && block.timestamp <= terminatedAt + terminationPeriod,
+            "OpenStream: the stream is already terminated"
+        );
+        _;
     }
     
     ///@dev it gets token balance of the smart contract.
@@ -48,9 +80,8 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
     }
 
     ///@dev payee can claim tokens which is proportional to elapsed time (exactly seconds).`
-    function claim() external nonReentrant {
+    function claim() external onlyPayee notTerminated nonReentrant {
         uint256 claimedAt = block.timestamp;
-        require(payee == msg.sender, "OpenStream: Only registered payee can claim tokens");
 
         uint256 balance = getTokenBanance();
         uint256 claimableAmount = calculate(claimedAt);
@@ -64,6 +95,13 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
         lastClaimedAt = claimedAt;
 
         emit TokensClaimed(claimableAmount);
+    }
+
+    ///@dev terminate the stream instance
+    function terminate() external onlyPayer {
+        require(terminatedAt == 0, "OpenStream: the stream is already terminated or in termination period");
+        terminatedAt = block.timestamp;
+        emit StreamTerminated();
     }
 
 }

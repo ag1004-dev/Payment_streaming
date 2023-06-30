@@ -7,4 +7,6 @@ interface IOpenStream {
     function calculate(uint256 claimedAt) external view returns (uint256);
 
     function claim() external;
+
+    function terminate() external;
 }
