@@ -10,6 +10,8 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
 
     event TokensClaimed(uint256);
 
+    ///@dev admin address
+    address public admin;
     ///@dev payee address
     address public payee;
     ///@dev token address; USDC or USDT
@@ -31,6 +33,7 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
         rate = _rate;
         createdAt = block.timestamp;
         lastClaimedAt = createdAt;
+        admin = msg.sender;
     }
     
     ///@dev it gets token balance of the smart contract.
@@ -50,13 +53,17 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
         require(payee == msg.sender, "OpenStream: Only registered payee can claim tokens");
 
         uint256 balance = getTokenBanance();
-        uint256 redeemedAmount = calculate(claimedAt);
-        require(balance >= redeemedAmount, "OpenStream: Not enough balance");
+        uint256 claimableAmount = calculate(claimedAt);
+        uint256 protocolFee = claimableAmount / 10;
+        require(balance >= claimableAmount + protocolFee, "OpenStream: Not enough balance");
 
-        IERC20(token).safeTransferFrom(address(this), msg.sender, redeemedAmount);
+        /// @dev send claimable tokens to payee
+        IERC20(token).safeTransferFrom(address(this), msg.sender, claimableAmount);
+        /// @dev send 10% commission to manager contract
+        IERC20(token).safeTransferFrom(address(this), admin, protocolFee);
         lastClaimedAt = claimedAt;
 
-        emit TokensClaimed(redeemedAmount);
+        emit TokensClaimed(claimableAmount);
     }
 
 }
