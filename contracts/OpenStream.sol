@@ -58,15 +58,6 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
         require(payer == msg.sender, "OpenStream: Only payer");
         _;
     }
-
-    ///@dev check if the stream is terminated or not
-    modifier notTerminated {
-        require(
-            terminatedAt == 0 || terminatedAt != 0 && block.timestamp <= terminatedAt + terminationPeriod,
-            "OpenStream: the stream is already terminated"
-        );
-        _;
-    }
     
     ///@dev it gets token balance of the smart contract.
     function getTokenBanance() public view returns (uint256) {
@@ -74,17 +65,25 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
     }
 
     ///@dev it calculates redeemed amount.
-    function calculate(uint256 claimedAt) public view returns (uint256) {
-        uint256 elapsed = claimedAt - lastClaimedAt;
+    function calculate(uint256 _claimedAt) public view returns (uint256) {
+        uint256 elapsed = _claimedAt - lastClaimedAt;
         return elapsed * rate / 30 / 24 / 3600;
     }
 
     ///@dev payee can claim tokens which is proportional to elapsed time (exactly seconds).`
-    function claim() external onlyPayee notTerminated nonReentrant {
+    function claim() external onlyPayee nonReentrant {
         uint256 claimedAt = block.timestamp;
+        uint256 claimableAmount;
+
+        if (terminatedAt == 0 || terminatedAt != 0 && claimedAt <= terminatedAt + terminationPeriod) {
+            claimableAmount = calculate(claimedAt);
+        } else {
+            ///@dev after the stream finished, payee can claim tokens which is accumulated until the termination period and can't claim anymore.
+            require(terminatedAt + terminationPeriod > lastClaimedAt, "OpenStream: payee already claimed its claimable tokens.");
+            claimableAmount = calculate(terminatedAt + terminationPeriod);
+        }
 
         uint256 balance = getTokenBanance();
-        uint256 claimableAmount = calculate(claimedAt);
         uint256 protocolFee = claimableAmount / 10;
         require(balance >= claimableAmount + protocolFee, "OpenStream: Not enough balance");
 
