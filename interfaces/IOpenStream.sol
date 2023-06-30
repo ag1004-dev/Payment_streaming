@@ -10,5 +10,6 @@ interface IOpenStream {
 
     function claim() external;
 
-    function setClaimable(bool _isClaimable) external;
+    function terminate() external;
+
 }

@@ -30,21 +30,24 @@ contract StreamManager is IStreamManager {
      * @dev Payer can create open stream instance with the params paying amounts of USDT or USDC
      * @param _payee payee address
      * @param _token token address; USDC or USDT
-     * @param _rate monthly rate
      * @param _amount USDC or USDT amount
+     * @param _rate monthly rate
+     * @param _terminationPeriod termination period
      */
-    function createOpenStream(address _payee, address _token, uint256 _rate, uint256 _amount) external {
+    function createOpenStream(address _payee, address _token, uint256 _amount, uint256 _rate, uint256 _terminationPeriod) external {
         require(_payee != address(0), "Stream Manager: invalid address");
         require(_token != address(0), "Stream Manager: invalid address");
         require(_rate > 0, "Stream Manager: montly reate must be greater than zero");
         require(_amount > 0, "Stream Manager: invalid token amount");
+        require(_terminationPeriod > 0, "Stream Manager: invalid termination period");
 
         /// @dev create a new open stream instance
         OpenStream openStreamInstance = new OpenStream(
+            msg.sender,
             _payee,
             _token,
             _rate,
-            true
+            _terminationPeriod
         );
         address streamInstance = address(openStreamInstance);
         /// @dev stores the address of the payee, and the address of his flow instance
