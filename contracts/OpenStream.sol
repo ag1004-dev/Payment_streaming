@@ -64,7 +64,7 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
     function claim() external nonReentrant {
         uint256 claimedAt = block.timestamp;
         require(payee == msg.sender, "OpenStream: Only registered payee can claim tokens");
-        require(isClaimable == true, "OpenStream: Stream is blocked, you not can claim tokens");
+        require(isClaimable == true, "OpenStream: Stream is canceled and not claimable anymore");
 
         uint256 balance = getTokenBanance();
         uint256 redeemedAmount = calculate(claimedAt);
