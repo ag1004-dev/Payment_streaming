@@ -47,7 +47,8 @@ contract StreamManager is IStreamManager {
             _payee,
             _token,
             _rate,
-            _terminationPeriod
+            _terminationPeriod,
+            true
         );
         address streamInstance = address(openStreamInstance);
         /// @dev stores the address of the payee, and the address of his flow instance

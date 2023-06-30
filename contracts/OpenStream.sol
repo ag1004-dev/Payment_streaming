@@ -29,13 +29,18 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
     uint256 public lastClaimedAt;
     ///@dev time which the stream instance is terminated
     uint256 public terminatedAt;
+    ///@dev flag indicating the contract's activation status.
+    /// If `isClaimable` is `true`, the contract is considered active and ready for use.
+    /// If `isClaimable` is `false`, the contract is considered to be terminated and certain functions may be disabled.
+    bool public isClaimable;
 
     constructor(
         address _payer,
         address _payee,
         address _token,
         uint256 _rate,
-        uint256 _terminationPeriod
+        uint256 _terminationPeriod,
+        bool _isClaimable
     ) ReentrancyGuard() {
         payer = _payer;
         payee = _payee;
@@ -45,6 +50,7 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
         createdAt = block.timestamp;
         lastClaimedAt = createdAt;
         admin = msg.sender;
+        isClaimable = _isClaimable;
     }
 
     ///@dev check if the caller is payee
@@ -84,6 +90,8 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
     function claim() external onlyPayee nonReentrant {
         uint256 claimedAt = block.timestamp;
         uint256 claimableAmount;
+
+        require(isClaimable == true, "OpenStream: Stream is canceled and not claimable anymore");
 
         if (terminatedAt == 0 || terminatedAt != 0 && claimedAt <= terminatedAt + terminationPeriod) {
             claimableAmount = calculate(claimedAt);
