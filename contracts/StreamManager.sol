@@ -69,7 +69,7 @@ contract StreamManager is IStreamManager {
         require(streamInstance != address(0), "Stream Manager: invalid address of the stream");
         require(amount > 0, "Stream Manager: amount must be greater than zero");
 
-        /// @dev setting `toggle` in OpenStream contract how `false` for blocking an open stream instance
+        /// @dev change `isClaimable` in OpenStream contract to `false` in order to cancel a stream
         IOpenStream(streamInstance).setClaimable(false);
         /// @dev getting the address of the token USDC or USDT from open stream instance
         address tokenAddress = IOpenStream(streamInstance).getTokenAddress();
