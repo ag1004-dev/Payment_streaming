@@ -10,5 +10,5 @@ interface IOpenStream {
 
     function claim() external;
 
-    function setToggle(bool _toggle) external;
+    function setClaimable(bool _isClaimable) external;
 }

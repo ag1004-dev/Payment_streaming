@@ -20,21 +20,23 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
     uint256 public createdAt;
     ///@dev time which the payee claimed lastly
     uint256 public lastClaimedAt;
-    ///@dev contract state switch
-    bool public toggle;
+    ///@dev Flag indicating the contract's activation status.
+    /// If `isClaimable` is `true`, the contract is considered active and ready for use.
+    /// If `isClaimable` is `false`, the contract is considered inactive and certain functions may be disabled.
+    bool public isClaimable;
 
     constructor(
         address _payee,
         address _token,
         uint256 _rate,
-        bool _toggle
+        bool _isClaimable
     ) ReentrancyGuard() {
         payee = _payee;
         token = _token;
         rate = _rate;
         createdAt = block.timestamp;
         lastClaimedAt = createdAt;
-        toggle = _toggle;
+        isClaimable = _isClaimable;
     }
     
     ///@dev it gets token balance of the smart contract.
@@ -48,8 +50,8 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
     }
 
     ///@dev it setting `toggle` on `false/true`.
-    function setToggle(bool _toggle) public {
-        toggle = _toggle;
+    function setClaimable(bool _isClaimable) public {
+        isClaimable = _isClaimable;
     }
 
     ///@dev it calculates redeemed amount.
@@ -62,7 +64,7 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
     function claim() external nonReentrant {
         uint256 claimedAt = block.timestamp;
         require(payee == msg.sender, "OpenStream: Only registered payee can claim tokens");
-        require(toggle == true, "OpenStream: Stream is blocked, you not can claim tokens");
+        require(isClaimable == true, "OpenStream: Stream is blocked, you not can claim tokens");
 
         uint256 balance = getTokenBanance();
         uint256 redeemedAmount = calculate(claimedAt);

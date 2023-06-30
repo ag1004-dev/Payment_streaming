@@ -70,7 +70,7 @@ contract StreamManager is IStreamManager {
         require(amount > 0, "Stream Manager: amount must be greater than zero");
 
         /// @dev setting `toggle` in OpenStream contract how `false` for blocking an open stream instance
-        IOpenStream(streamInstance).setToggle(false);
+        IOpenStream(streamInstance).setClaimable(false);
         /// @dev getting the address of the token USDC or USDT from open stream instance
         address tokenAddress = IOpenStream(streamInstance).getTokenAddress();
         IERC20(tokenAddress).safeTransferFrom(streamInstance, msg.sender, amount);
