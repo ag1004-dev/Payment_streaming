@@ -26,16 +26,17 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
     bool public isClaimable;
 
     constructor(
-        address _payee,
-        address _token,
-        uint256 _rate,
-        bool _isClaimable
+    address _payee,
+    address _token,
+    uint256 _rate,
+    bool _isClaimable
     ) ReentrancyGuard() {
         payee = _payee;
         token = _token;
         rate = _rate;
         createdAt = block.timestamp;
         lastClaimedAt = createdAt;
+        admin = msg.sender;
         isClaimable = _isClaimable;
     }
     
