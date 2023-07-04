@@ -11,6 +11,14 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
     event TokensClaimed(uint256);
     event StreamTerminated();
 
+    error CliffPeriodIsNotEnded();
+    error NotPayee();
+    error NotPayer();
+    error UnClaimable();
+    error CanNotClaimAnyMore();
+    error InsufficientBalance();
+    error AlreadyTerminatedOrTerminating();
+
     ///@dev admin address
     address public admin;
     ///@dev payer address
@@ -59,19 +67,24 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
 
     ///@dev check if the caller is payee
     modifier onlyPayee {
-        require(payee == msg.sender, "OpenStream: Only payee");
+        if (payee != msg.sender) revert NotPayee();
         _;
     }
 
     ///@dev check if the caller is payer
     modifier onlyPayer {
-        require(payer == msg.sender, "OpenStream: Only payer");
+        if (payer != msg.sender) revert NotPayer();
         _;
     }
 
     ///@dev check if the cliff period is ended
     modifier onlyAfterCliffPeriod {
-        require(block.timestamp > createdAt  + cliffPeriod, "OpenStream: cliff period is not ended");
+        if (block.timestamp <= createdAt  + cliffPeriod) revert CliffPeriodIsNotEnded();
+        _;
+    }
+
+    modifier onlyClaimable {
+        if (!isClaimable) revert UnClaimable();
         _;
     }
     
@@ -98,6 +111,7 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
 
     ///@dev payee can claim tokens which is proportional to elapsed time (exactly seconds).
     function claim()
+        onlyClaimable
         onlyPayee
         onlyAfterCliffPeriod
         nonReentrant
@@ -106,19 +120,17 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
         uint256 claimedAt = block.timestamp;
         uint256 claimableAmount;
 
-        require(isClaimable == true, "OpenStream: Stream is canceled and not claimable anymore");
-
         if (terminatedAt == 0 || terminatedAt != 0 && claimedAt <= terminatedAt + terminationPeriod) {
             claimableAmount = calculate(claimedAt);
         } else {
             ///@dev after the stream finished, payee can claim tokens which is accumulated until the termination period and can't claim anymore.
-            require(terminatedAt + terminationPeriod > lastClaimedAt, "OpenStream: payee already claimed its claimable tokens.");
+            if (terminatedAt + terminationPeriod <= lastClaimedAt) revert CanNotClaimAnyMore();
             claimableAmount = calculate(terminatedAt + terminationPeriod);
         }
 
         uint256 balance = getTokenBanance();
         uint256 protocolFee = claimableAmount / 10;
-        require(balance >= claimableAmount + protocolFee, "OpenStream: Not enough balance");
+        if (balance < claimableAmount + protocolFee) revert InsufficientBalance();
 
         /// @dev send claimable tokens to payee
         IERC20(token).safeTransferFrom(address(this), msg.sender, claimableAmount);
@@ -131,7 +143,7 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
 
     ///@dev terminate the stream instance
     function terminate() external onlyPayer {
-        require(terminatedAt == 0, "OpenStream: the stream is already terminated or in termination period");
+        if (terminatedAt != 0) revert AlreadyTerminatedOrTerminating();
         terminatedAt = block.timestamp;
         emit StreamTerminated();
     }
