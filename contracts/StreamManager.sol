@@ -8,9 +8,7 @@ import "./OpenStream.sol";
 
 contract StreamManager is IStreamManager {
     using SafeERC20 for IERC20;
-
-    /// @dev Mapping for addresses of streams instance 
-    mapping(address => address) public streams;
+    
     /**
      * @dev New open stream event
      * @param _payer payer address
@@ -23,6 +21,12 @@ contract StreamManager is IStreamManager {
      * @param _amount amount of the tokens
      */
     event CancelStream(address _payer, uint256 _amount);
+
+    error InvalidAddress();
+    error InvalidValue();
+
+    /// @dev Mapping for addresses of streams instance 
+    mapping(address => address) public streams;
 
     constructor() {}
 
@@ -43,12 +47,9 @@ contract StreamManager is IStreamManager {
         uint256 _terminationPeriod,
         uint256 _cliffPeriod
     ) external {
-        require(_payee != address(0), "Stream Manager: invalid address");
-        require(_token != address(0), "Stream Manager: invalid address");
-        require(_rate > 0, "Stream Manager: montly reate must be greater than zero");
-        require(_amount > 0, "Stream Manager: invalid token amount");
-        require(_terminationPeriod > 0, "Stream Manager: invalid termination period");
-        require(_cliffPeriod > 0, "Stream Manager: invalid cliff period");
+        if (_payee == address(0) || _token == address(0)) revert InvalidAddress();
+        if (_rate == 0 || _amount == 0 || _terminationPeriod == 0 || _cliffPeriod == 0)
+            revert InvalidValue();
 
         /// @dev create a new open stream instance
         OpenStream openStreamInstance = new OpenStream(
@@ -79,9 +80,8 @@ contract StreamManager is IStreamManager {
         /// @dev getting the balance of the token USDC or USDT
         uint256 amount = IOpenStream(streamInstance).getTokenBanance();
 
-        require(_payee != address(0), "Stream Manager: invalid address");
-        require(streamInstance != address(0), "Stream Manager: invalid address of the stream");
-        require(amount > 0, "Stream Manager: amount must be greater than zero");
+        if (_payee != address(0) || streamInstance != address(0)) revert InvalidAddress();
+        if (amount == 0) revert InvalidValue();
 
         /// @dev change `isClaimable` in OpenStream contract to `false` in order to cancel a stream
         IOpenStream(streamInstance).setClaimable(false);
