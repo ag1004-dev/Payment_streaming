@@ -33,13 +33,22 @@ contract StreamManager is IStreamManager {
      * @param _amount USDC or USDT amount
      * @param _rate monthly rate
      * @param _terminationPeriod termination period
+     * @param _cliffPeriod cliff period
      */
-    function createOpenStream(address _payee, address _token, uint256 _amount, uint256 _rate, uint256 _terminationPeriod) external {
+    function createOpenStream(
+        address _payee,
+        address _token,
+        uint256 _amount,
+        uint256 _rate,
+        uint256 _terminationPeriod,
+        uint256 _cliffPeriod
+    ) external {
         require(_payee != address(0), "Stream Manager: invalid address");
         require(_token != address(0), "Stream Manager: invalid address");
         require(_rate > 0, "Stream Manager: montly reate must be greater than zero");
         require(_amount > 0, "Stream Manager: invalid token amount");
         require(_terminationPeriod > 0, "Stream Manager: invalid termination period");
+        require(_cliffPeriod > 0, "Stream Manager: invalid cliff period");
 
         /// @dev create a new open stream instance
         OpenStream openStreamInstance = new OpenStream(
@@ -48,6 +57,7 @@ contract StreamManager is IStreamManager {
             _token,
             _rate,
             _terminationPeriod,
+            _cliffPeriod,
             true
         );
         address streamInstance = address(openStreamInstance);
