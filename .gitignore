@@ -1,1 +1,11 @@
+#Hardhat files
+cache
+artifacts
+typechain
+typechain-types
 node_modules
+
+# OpenZeppelin
+.openzeppelin/unknown-*.json
+
+
