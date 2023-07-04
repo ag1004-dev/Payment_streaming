@@ -7,6 +7,7 @@ interface IStreamManager {
         address _token,
         uint256 _amount,
         uint256 _rate,
-        uint256 _terminationPeriod
+        uint256 _terminationPeriod,
+        uint256 _cliffPeriod
     ) external;
 }

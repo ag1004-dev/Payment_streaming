@@ -23,6 +23,8 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
     uint256 public rate;
     ///@dev termination period
     uint256 public terminationPeriod;
+    ///@dev cliff period
+    uint256 public cliffPeriod;
     ///@dev time which the instance created
     uint256 public createdAt;
     ///@dev time which the payee claimed lastly
@@ -40,6 +42,7 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
         address _token,
         uint256 _rate,
         uint256 _terminationPeriod,
+        uint256 _cliffPeriod,
         bool _isClaimable
     ) ReentrancyGuard() {
         payer = _payer;
@@ -47,6 +50,7 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
         token = _token;
         rate = _rate;
         terminationPeriod = _terminationPeriod;
+        cliffPeriod = _cliffPeriod;
         createdAt = block.timestamp;
         lastClaimedAt = createdAt;
         admin = msg.sender;
@@ -62,6 +66,12 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
     ///@dev check if the caller is payer
     modifier onlyPayer {
         require(payer == msg.sender, "OpenStream: Only payer");
+        _;
+    }
+
+    ///@dev check if the cliff period is ended
+    modifier onlyAfterCliffPeriod {
+        require(block.timestamp > createdAt  + cliffPeriod, "OpenStream: cliff period is not ended");
         _;
     }
     
@@ -86,8 +96,13 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
         return elapsed * rate / 30 / 24 / 3600;
     }
 
-    ///@dev payee can claim tokens which is proportional to elapsed time (exactly seconds).`
-    function claim() external onlyPayee nonReentrant {
+    ///@dev payee can claim tokens which is proportional to elapsed time (exactly seconds).
+    function claim()
+        onlyPayee
+        onlyAfterCliffPeriod
+        nonReentrant
+        external
+    {
         uint256 claimedAt = block.timestamp;
         uint256 claimableAmount;
 
