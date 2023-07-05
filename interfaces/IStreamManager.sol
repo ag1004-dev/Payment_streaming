@@ -15,4 +15,6 @@ interface IStreamManager {
     function claim() external;
 
     function terminate(address _payee) external;
+
+    function deposit(address _token, uint256 _amount) external;
 }

@@ -32,6 +32,12 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
      * @param _payee payee address
      */
     event StreamTerminated(address _payee);
+    /**
+     * @dev Deposit tokens
+     * @param _token token address
+     * @param _amount amount
+     */
+    event TokensDeposited(address _token, uint256 _amount);
 
     error InvalidAddress();
     error InvalidValue();
@@ -186,12 +192,29 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         emit TokensClaimed(msg.sender, claimableAmount);
     }
 
-    ///@dev terminate the stream instance
+    /**
+     * @dev terminate the stream instance
+     * @param _payee payee's address
+     */
     function terminate(address _payee) external onlyPayer {
         uint256 terminatedAt = block.timestamp;
         if (streamInstances[_payee].terminatedAt != 0) revert AlreadyTerminatedOrTerminating();
         streamInstances[_payee].terminatedAt = terminatedAt;
         
         emit StreamTerminated(_payee);
+    }
+    
+    /**
+     * @dev deposit tokens
+     * @param _token token's address
+     * @param _amount token amount to deposit
+     */
+    function deposit(address _token, uint256 _amount) external onlyPayer {
+        if (_token == address(0)) revert InvalidAddress();
+        if (_amount == 0) revert InvalidValue();
+
+        IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+
+        emit TokensDeposited(_token, _amount);
     }
 }
