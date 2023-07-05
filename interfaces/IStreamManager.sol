@@ -9,9 +9,7 @@ interface IStreamManager {
         uint256 _terminationPeriod,
         uint256 _cliffPeriod
     ) external;
-
-    function cancelOpenStream(address _payee) external;
-
+    
     function claim() external;
 
     function terminate(address _payee) external;

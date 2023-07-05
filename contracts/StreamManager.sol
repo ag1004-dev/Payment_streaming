@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/IStreamManager.sol";
-import "../interfaces/IOpenStream.sol";
 
 contract StreamManager is IStreamManager, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -43,7 +42,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     error InvalidValue();
     error CliffPeriodIsNotEnded();
     error NotPayer();
-    error UnClaimable();
+    error NotPayee();
     error CanNotClaimAnyMore();
     error InsufficientBalance();
     error AlreadyTerminatedOrTerminating();
@@ -54,10 +53,8 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         uint256 rate;
         uint256 terminationPeriod;
         uint256 cliffPeriod;
-        uint256 createdAt;
         uint256 lastClaimedAt;
         uint256 terminatedAt;
-        bool isClaimable;
     }
 
     ///@dev admin address
@@ -66,6 +63,8 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     address public payer;
     /// @dev payee's address => instance
     mapping(address => OpenStream) public streamInstances;
+    /// @dev payee's address => true/false
+    mapping(address => bool) public isPayee;
 
     constructor(address _payer) {
         payer = _payer;
@@ -78,22 +77,17 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         _;
     }
 
-    ///@dev check if the payee is claimable
-    modifier onlyClaimable {
-        if (!streamInstances[msg.sender].isClaimable) revert UnClaimable();
+    ///@dev check if the payee is
+    modifier onlyPayee {
+        if (!isPayee[msg.sender]) revert NotPayee();
         _;
     }
 
     ///@dev check if the cliff period is ended
     modifier onlyAfterCliffPeriod {
-        if (block.timestamp <= streamInstances[msg.sender].createdAt  + streamInstances[msg.sender].cliffPeriod)
+        if (block.timestamp <= streamInstances[msg.sender].lastClaimedAt)
             revert CliffPeriodIsNotEnded();
         _;
-    }
-    
-    ///@dev changes `isClaimable` status into `false/true`.
-    function setClaimable(address _payee, bool _isClaimable) private {
-        streamInstances[_payee].isClaimable = _isClaimable;
     }
 
     ///@dev it calculates claimable amount.
@@ -135,31 +129,17 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
             _rate,
             _terminationPeriod,
             _cliffPeriod,
-            block.timestamp, // created at
             block.timestamp + _cliffPeriod, // lastly claimed at
-            0,               // terminated at
-            true             // isClaimable
+            0                               // terminated at
         );
+        isPayee[_payee] = true;
 
         emit StreamCreated(msg.sender, _payee);
     }
 
-    /**
-     * @dev Payer can cancel open stream instance
-     * @param _payee payee address
-     */
-    function cancelOpenStream(address _payee) external onlyPayer {
-        if (_payee != address(0)) revert InvalidAddress();
-
-        /// @dev change `isClaimable` in OpenStream contract to `false` in order to cancel a stream
-        setClaimable(_payee, false);
-
-        emit StreamCancelled(msg.sender, _payee);
-    }
-
     ///@dev payee can claim tokens which is proportional to elapsed time (exactly seconds).
     function claim()
-        onlyClaimable
+        onlyPayee
         onlyAfterCliffPeriod
         nonReentrant
         external
