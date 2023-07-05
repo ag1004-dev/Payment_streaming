@@ -38,6 +38,13 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
      */
     event TokensDeposited(address _token, uint256 _amount);
 
+    /**
+     * @dev Update of the rate
+     * @param _payer address of the payer
+     * @param _amount amount
+     */
+    event RateUpdated(address _payer, uint256 _amount);
+
     error InvalidAddress();
     error InvalidValue();
     error CliffPeriodIsNotEnded();
@@ -46,6 +53,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     error CanNotClaimAnyMore();
     error InsufficientBalance();
     error AlreadyTerminatedOrTerminating();
+    error OnlyPayerOrAdmin();
 
     struct OpenStream {
         address payee;
@@ -90,8 +98,14 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         _;
     }
 
+    modifier onlyAdminOrPayer {
+        if (msg.sender != admin || msg.sender != payer)
+            revert OnlyPayerOrAdmin();
+        _;
+    }
+
     ///@dev it calculates claimable amount.
-    function calculate( address _payee, uint256 _claimedAt) private view returns (uint256) {
+    function calculate(address _payee, uint256 _claimedAt) private view returns (uint256) {
         unchecked {
             uint256 elapsed = _claimedAt - streamInstances[_payee].lastClaimedAt;
             return elapsed * streamInstances[_payee].rate / 30 / 24 / 3600;    
@@ -196,5 +210,19 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
         emit TokensDeposited(_token, _amount);
+    }
+
+    ///@dev shows accumulated amount in USDT or USDC
+    function accumulation() external onlyPayee view returns(uint256) {
+        uint256 amount = calculate(msg.sender, block.timestamp);
+        //@dev return the amount
+        return amount;
+    }
+
+    ///@dev it setting a new rate for this contract(instance open stream).
+    /// Can call only `admin` or `payer`.
+    function updateRate(uint256 _rate, address _payee) public onlyAdminOrPayer {
+        streamInstances[_payee].rate = _rate;
+        emit RateUpdated(msg.sender, _rate);
     }
 }
