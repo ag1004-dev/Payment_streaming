@@ -136,7 +136,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
             _terminationPeriod,
             _cliffPeriod,
             block.timestamp, // created at
-            block.timestamp, // lastly claimed at
+            block.timestamp + _cliffPeriod, // lastly claimed at
             0,               // terminated at
             true             // isClaimable
         );
