@@ -14,4 +14,6 @@ interface IOpenStream {
 
     function terminate() external;
 
+    function accumulation() external view returns (uint256);
+
 }

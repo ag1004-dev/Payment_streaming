@@ -7,5 +7,3 @@ node_modules
 
 # OpenZeppelin
 .openzeppelin/unknown-*.json
-
-

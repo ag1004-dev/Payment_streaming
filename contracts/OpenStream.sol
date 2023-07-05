@@ -148,4 +148,9 @@ contract OpenStream is ReentrancyGuard, IOpenStream {
         emit StreamTerminated();
     }
 
+    ///@dev shows accumulated amount in USDT or USDC
+    function accumulation() external onlyPayee view returns(uint256) {
+        //@dev return the amount
+        return calculate(block.timestamp);
+    }
 }
