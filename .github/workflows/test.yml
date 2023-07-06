@@ -1,0 +1,37 @@
+name: Autotests
+
+on:
+  push:
+    branches:
+      - "main"
+
+  pull_request:
+    branches:
+      - "main"
+
+  workflow_dispatch:
+
+env:
+  TESTING_POOL: BasicPool
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install nodejs
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          cache: 'npm'
+
+      - name: Install packages
+        run: npm i
+
+      - name: Compile contracts
+        run: npm run compile
+
+      - name: Run tests
+        run: npm test
