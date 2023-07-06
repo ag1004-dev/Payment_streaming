@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract MockUSDT is ERC20, Ownable {
+    event Minted(address account, uint256 amount);
+
     uint8 private _decimals;
 
     constructor(
@@ -17,6 +19,8 @@ contract MockUSDT is ERC20, Ownable {
 
     function mint(address account, uint256 amount) external {
         _mint(account, amount);
+
+        emit Minted(account, amount);
     }
 
     function decimals() public view override returns (uint8) {
