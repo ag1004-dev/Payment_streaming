@@ -38,13 +38,6 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
      */
     event TokensDeposited(address _token, uint256 _amount);
 
-    /**
-     * @dev Update of the rate
-     * @param _payer address of the payer
-     * @param _amount amount
-     */
-    event RateUpdated(address _payer, uint256 _amount);
-
     error InvalidAddress();
     error InvalidValue();
     error CliffPeriodIsNotEnded();
@@ -53,7 +46,6 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     error CanNotClaimAnyMore();
     error InsufficientBalance();
     error AlreadyTerminatedOrTerminating();
-    error OnlyPayerOrAdmin();
 
     struct OpenStream {
         address payee;
@@ -95,12 +87,6 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     modifier onlyAfterCliffPeriod {
         if (block.timestamp <= streamInstances[msg.sender].lastClaimedAt)
             revert CliffPeriodIsNotEnded();
-        _;
-    }
-
-    modifier onlyAdminOrPayer {
-        if (msg.sender != admin || msg.sender != payer)
-            revert OnlyPayerOrAdmin();
         _;
     }
 
@@ -217,12 +203,5 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         uint256 amount = calculate(msg.sender, block.timestamp);
         //@dev return the amount
         return amount;
-    }
-
-    ///@dev it setting a new rate for this contract(instance open stream).
-    /// Can call only `admin` or `payer`.
-    function updateRate(uint256 _rate, address _payee) public onlyAdminOrPayer {
-        streamInstances[_payee].rate = _rate;
-        emit RateUpdated(msg.sender, _rate);
     }
 }
