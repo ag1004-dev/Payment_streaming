@@ -53,6 +53,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         uint256 rate;
         uint256 terminationPeriod;
         uint256 cliffPeriod;
+        uint256 createdAt;
         uint256 lastClaimedAt;
         uint256 terminatedAt;
     }
@@ -129,6 +130,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
             _rate,
             _terminationPeriod,
             _cliffPeriod,
+            block.timestamp,
             block.timestamp + _cliffPeriod, // lastly claimed at
             0                               // terminated at
         );
@@ -200,6 +202,9 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
 
     ///@dev shows accumulated amount in USDT or USDC
     function accumulation() external onlyPayee view returns(uint256) {
+        if (block.timestamp <= streamInstances[msg.sender].createdAt + streamInstances[msg.sender].cliffPeriod)
+            return 0;
+
         uint256 amount = calculate(msg.sender, block.timestamp);
         //@dev return the amount
         return amount;
