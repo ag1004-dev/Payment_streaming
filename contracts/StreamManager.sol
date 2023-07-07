@@ -166,9 +166,9 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         if (balance < claimableAmount + protocolFee) revert InsufficientBalance();
 
         /// @dev send claimable tokens to payee
-        IERC20(token).safeTransferFrom(address(this), msg.sender, claimableAmount);
+        IERC20(token).safeTransfer(msg.sender, claimableAmount);
         /// @dev send 10% commission to manager contract
-        IERC20(token).safeTransferFrom(address(this), admin, protocolFee);
+        IERC20(token).safeTransfer(admin, protocolFee);
         streamInstances[msg.sender].lastClaimedAt = claimedAt;
 
         emit TokensClaimed(msg.sender, claimableAmount);
