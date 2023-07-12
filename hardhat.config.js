@@ -11,7 +11,7 @@ module.exports = {
     hardhat: {
     },
     mumbai: {
-      url: process.env.POLYGON_MUMBAI_RPC_PROVIDER,
+      url: "https://rpc-mumbai.maticvigil.com/",
       accounts: [process.env.PRIVATE_KEY]
     }
   },

@@ -231,11 +231,11 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     }
 
     ///@dev shows accumulated amount in USDT or USDC
-    function accumulation() external onlyPayee view returns(uint256) {
-        if (block.timestamp <= streamInstances[msg.sender].createdAt + streamInstances[msg.sender].cliffPeriod)
+    function accumulation(address _payee) public view returns(uint256) {
+        if (block.timestamp <= streamInstances[_payee].createdAt + streamInstances[_payee].cliffPeriod)
             return 0;
 
-        uint256 amount = calculate(msg.sender, block.timestamp);
+        uint256 amount = calculate(_payee, block.timestamp);
         //@dev return the amount
         return amount;
     }
