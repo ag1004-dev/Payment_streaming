@@ -38,6 +38,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
      */
     event TokensDeposited(address _token, uint256 _amount);
 
+    ///@dev errors
     error InvalidAddress();
     error InvalidValue();
     error CliffPeriodIsNotEnded();
@@ -46,6 +47,8 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     error CanNotClaimAnyMore();
     error InsufficientBalance();
     error AlreadyTerminatedOrTerminating();
+    error AlreadyTerminated();
+    error TerminatedInCliffPeriod();
 
     struct OpenStream {
         address payee;
@@ -56,6 +59,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         uint256 createdAt;
         uint256 lastClaimedAt;
         uint256 terminatedAt;
+        bool isTerminated;
     }
 
     ///@dev admin address
@@ -86,8 +90,28 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
 
     ///@dev check if the cliff period is ended
     modifier onlyAfterCliffPeriod {
-        if (block.timestamp <= streamInstances[msg.sender].lastClaimedAt)
+        uint256 createdAt = streamInstances[msg.sender].createdAt;
+        uint256 cliffPeriod = streamInstances[msg.sender].cliffPeriod;
+        if (block.timestamp <= createdAt + cliffPeriod)
             revert CliffPeriodIsNotEnded();
+        _;
+    }
+
+    ///@dev check if it's terminated or not
+    modifier notTerminated {
+        if (streamInstances[msg.sender].isTerminated)
+            revert AlreadyTerminated();
+        _;
+    }
+
+    modifier notTerminatedInCliffPeriod {
+        bool isTerminated = streamInstances[msg.sender].isTerminated;
+        uint256 terminatedAt = streamInstances[msg.sender].terminatedAt;
+        uint256 createdAt = streamInstances[msg.sender].createdAt;
+        uint256 cliffPeriod = streamInstances[msg.sender].cliffPeriod;
+
+        if (isTerminated && terminatedAt <= createdAt + cliffPeriod)
+            revert TerminatedInCliffPeriod();
         _;
     }
 
@@ -132,7 +156,8 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
             _cliffPeriod,
             block.timestamp,
             block.timestamp + _cliffPeriod, // lastly claimed at
-            0                               // terminated at
+            0,                              // terminated at
+            false                           // isTerminated
         );
         isPayee[_payee] = true;
 
@@ -142,6 +167,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     ///@dev payee can claim tokens which is proportional to elapsed time (exactly seconds).
     function claim()
         onlyPayee
+        notTerminatedInCliffPeriod
         onlyAfterCliffPeriod
         nonReentrant
         external
@@ -151,9 +177,10 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         uint256 lastClaimedAt = streamInstances[msg.sender].lastClaimedAt;
         address token = streamInstances[msg.sender].token;
         uint256 terminationPeriod = streamInstances[msg.sender].terminationPeriod;
+        bool isTerminated = streamInstances[msg.sender].isTerminated;
         uint256 claimableAmount;
 
-        if (terminatedAt == 0 || terminatedAt != 0 && claimedAt <= terminatedAt + terminationPeriod) {
+        if (!isTerminated || isTerminated && claimedAt <= terminatedAt + terminationPeriod) {
             claimableAmount = calculate(msg.sender, claimedAt);
         } else {
             ///@dev after the stream finished, payee can claim tokens which is accumulated until the termination period and can't claim anymore.
@@ -178,11 +205,12 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
      * @dev terminate the stream instance
      * @param _payee payee's address
      */
-    function terminate(address _payee) external onlyPayer {
+    function terminate(address _payee) external onlyPayer notTerminated {
         uint256 terminatedAt = block.timestamp;
         if (streamInstances[_payee].terminatedAt != 0) revert AlreadyTerminatedOrTerminating();
+        streamInstances[_payee].isTerminated = true;
         streamInstances[_payee].terminatedAt = terminatedAt;
-        
+
         emit StreamTerminated(_payee);
     }
     
