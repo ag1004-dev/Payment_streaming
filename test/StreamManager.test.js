@@ -119,6 +119,17 @@ describe("StreamManager", function () {
     ).to.be.revertedWith('InvalidValue');
   })
 
+  // Expecting revert with `OpenStreamExists`
+  it('Creating open stream instance: Previous stream has not been ended', async () => {
+    await expect(this.streamManager.createOpenStream(
+      this.payee1.address,
+      this.mockUSDT.address,
+      this.rate,
+      this.terminationPeriod,
+      this.cliffPeriod
+    )).to.be.revertedWith('OpenStreamExists');
+  })
+
   // Tests for `deposit();`
   // Deposit USDT(mock)
   it('Deposit succeed;', async () => {
@@ -264,6 +275,46 @@ describe("StreamManager", function () {
     await expect(
       this.streamManager.connect(this.payee1).claim()
     ).to.be.revertedWith('CanNotClaimAnyMore')
+  })
+
+  it('Creating next open stream instance fails: previous open stream has terminated, but payee can still claim(still in termination period)', async () => {
+    // Creates first open stream
+    await this.streamManager.createOpenStream(
+      this.payee2.address,
+      this.mockUSDT.address,
+      this.rate,
+      this.terminationPeriod,
+      this.cliffPeriod
+    )
+
+    await time.increase(10 * 24 * 3600); // + 10 days
+    // terminate 
+    await this.streamManager.connect(this.payer).terminate(this.payee2.address)
+
+    await expect(
+      this.streamManager.createOpenStream(
+        this.payee2.address,
+        this.mockUSDT.address,
+        this.rate,
+        this.terminationPeriod,
+        this.cliffPeriod
+      )
+    ).to.be.revertedWith('StreamIsTerminating');
+  })
+
+  it('Creating next open stream instance success', async () => {
+    await time.increase(20 * 24 * 3600); // + 20 days
+
+    await expect(
+      this.streamManager.createOpenStream(
+        this.payee2.address,
+        this.mockUSDT.address,
+        this.rate,
+        this.terminationPeriod,
+        this.cliffPeriod
+      )
+    ).to.emit(this.streamManager, "StreamCreated")
+    .withArgs(this.admin.address, this.payee2.address);
   })
 
 });

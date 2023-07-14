@@ -50,6 +50,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     error AlreadyTerminated();
     error TerminatedInCliffPeriod();
     error OpenStreamExists();
+    error StreamIsTerminating();
 
     struct OpenStream {
         address payee;
@@ -147,7 +148,16 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         if (_payee == address(0) || _token == address(0)) revert InvalidAddress();
         if (_rate == 0 || _terminationPeriod == 0 || _cliffPeriod == 0)
             revert InvalidValue();
-        if (streamInstances[_payee].createdAt != 0) revert OpenStreamExists();
+        if (
+            streamInstances[_payee].createdAt > 0 &&
+            streamInstances[_payee].terminatedAt == 0
+        ) revert OpenStreamExists();
+        if (
+            streamInstances[_payee].createdAt > 0 &&
+            streamInstances[_payee].terminatedAt != 0 &&
+            streamInstances[_payee].createdAt + streamInstances[_payee].cliffPeriod < streamInstances[_payee].terminatedAt &&
+            streamInstances[_payee].terminatedAt + streamInstances[_payee].terminationPeriod > block.timestamp
+        ) revert StreamIsTerminating();
 
         /// @dev create a new open stream instance
         streamInstances[_payee] = OpenStream(
