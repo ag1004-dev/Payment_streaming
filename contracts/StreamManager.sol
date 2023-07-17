@@ -51,6 +51,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     error TerminatedInCliffPeriod();
     error OpenStreamExists();
     error StreamIsTerminating();
+    error PreviousStreamHasBalance();
 
     struct OpenStream {
         address payee;
@@ -158,6 +159,8 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
             streamInstances[_payee].createdAt + streamInstances[_payee].cliffPeriod < streamInstances[_payee].terminatedAt &&
             streamInstances[_payee].terminatedAt + streamInstances[_payee].terminationPeriod > block.timestamp
         ) revert StreamIsTerminating();
+        // checks if previous stream has balance
+        if (accumulation(_payee) > 0) revert PreviousStreamHasBalance();
 
         /// @dev create a new open stream instance
         streamInstances[_payee] = OpenStream(

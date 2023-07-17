@@ -313,6 +313,19 @@ describe("StreamManager:", function () {
     ).to.be.revertedWith('StreamIsTerminating');
   })
 
+  // Expecting revert with `PreviousStreamHasBalance`
+  it('Creating next stream instance fails: Previous stream has been ended, but has balance', async () => {
+    await time.increase(20 * 24 * 3600); // + 20 days
+
+    await expect(this.streamManager.createOpenStream(
+      this.payee5.address,
+      this.mockUSDT.address,
+      this.rate,
+      this.terminationPeriod,
+      this.cliffPeriod
+    )).to.be.revertedWith('PreviousStreamHasBalance');
+  })
+
   it('Creating next open stream instance success', async () => {
     await time.increase(20 * 24 * 3600); // + 20 days
 
