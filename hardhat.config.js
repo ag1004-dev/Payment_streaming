@@ -5,14 +5,19 @@ require("@nomiclabs/hardhat-etherscan");
 require("dotenv").config();
 require("solidity-coverage");
 
+const {
+  PRIVATE_KEY,
+  POLYGONSCAN_API_KEY,
+} = process.env;
+
 module.exports = {
-  defaultNetwork: "mumbai",
+  defaultNetwork: "hardhat", //"mumbai",
   networks: {
     hardhat: {
     },
     mumbai: {
       url: "https://rpc-mumbai.maticvigil.com/",
-      accounts: [process.env.PRIVATE_KEY]
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     }
   },
   solidity: {
