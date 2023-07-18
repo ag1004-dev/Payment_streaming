@@ -33,5 +33,5 @@ jobs:
       - name: Compile contracts
         run: npm run compile
 
-      - name: Run tests
-        run: npm test
+      - name: Run tests coverage
+        run: npm run coverage
