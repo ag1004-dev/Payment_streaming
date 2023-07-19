@@ -17,4 +17,6 @@ interface IStreamManager {
     function deposit(address _token, uint256 _amount) external;
 
     function accumulation(address _payee) external view returns(uint256);
+
+    function changePayer(address _payer) external;
 }

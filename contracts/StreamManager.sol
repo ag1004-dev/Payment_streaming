@@ -37,6 +37,11 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
      * @param _amount amount
      */
     event TokensDeposited(address _token, uint256 _amount);
+    /**
+     * @dev Payer changing
+     * @param _payer new address  
+     */
+    event PayerChanging(address _payer);
 
     ///@dev errors
     error InvalidAddress();
@@ -44,6 +49,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     error CliffPeriodIsNotEnded();
     error NotPayer();
     error NotPayee();
+    error NotAdmin();
     error CanNotClaimAnyMore();
     error InsufficientBalance();
     error AlreadyTerminatedOrTerminating();
@@ -107,6 +113,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         _;
     }
 
+    ///@dev check if not terminated in cliff period
     modifier notTerminatedInCliffPeriod {
         bool isTerminated = streamInstances[msg.sender].isTerminated;
         uint256 terminatedAt = streamInstances[msg.sender].terminatedAt;
@@ -115,6 +122,12 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
 
         if (isTerminated && terminatedAt <= createdAt + cliffPeriod)
             revert TerminatedInCliffPeriod();
+        _;
+    }
+
+    ///@dev check if the admin is
+    modifier onlyAdmin {
+        if (msg.sender != admin) revert NotAdmin();
         _;
     }
 
@@ -251,5 +264,14 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         uint256 amount = calculate(_payee, block.timestamp);
         //@dev return the amount
         return amount;
+    }
+
+    ///@dev changing address of the payer
+    function changePayer(address _payer) public onlyAdmin {
+        if (_payer == address(0)) revert InvalidAddress();
+        if (_payer == payer) revert InvalidAddress();
+        
+        payer = _payer;
+        emit PayerChanging(_payer);
     }
 }
