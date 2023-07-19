@@ -235,6 +235,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
      */
     function terminate(address _payee) external onlyPayer notTerminated {
         uint256 terminatedAt = block.timestamp;
+        if (!isPayee[_payee]) revert NotPayee();
         if (streamInstances[_payee].terminatedAt != 0) revert AlreadyTerminatedOrTerminating();
         streamInstances[_payee].isTerminated = true;
         streamInstances[_payee].terminatedAt = terminatedAt;
