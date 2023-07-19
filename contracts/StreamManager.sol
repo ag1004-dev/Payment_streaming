@@ -133,6 +133,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
 
     ///@dev it calculates claimable amount.
     function calculate(address _payee, uint256 _claimedAt) private view returns (uint256) {
+        if (_claimedAt < streamInstances[_payee].lastClaimedAt) return 0;
         unchecked {
             uint256 elapsed = _claimedAt - streamInstances[_payee].lastClaimedAt;
             return elapsed * streamInstances[_payee].rate / 30 / 24 / 3600;    
@@ -258,13 +259,17 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     }
 
     ///@dev shows accumulated amount in USDT or USDC
-    function accumulation(address _payee) public view returns(uint256) {
+    function accumulation(address _payee) public view returns(uint256 amount) {
         if (block.timestamp <= streamInstances[_payee].createdAt + streamInstances[_payee].cliffPeriod)
             return 0;
-
-        uint256 amount = calculate(_payee, block.timestamp);
-        //@dev return the amount
-        return amount;
+        bool isTerminated = streamInstances[_payee].isTerminated;
+        uint256 terminatedAt = streamInstances[_payee].terminatedAt;
+        uint256 terminationPeriod = streamInstances[_payee].terminationPeriod;
+        if (!isTerminated || isTerminated && block.timestamp <= terminatedAt + terminationPeriod) {
+            amount = calculate(_payee, block.timestamp);
+        } else {
+            amount = calculate(_payee, terminatedAt + terminationPeriod);
+        }
     }
 
     ///@dev changing address of the payer
