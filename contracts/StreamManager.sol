@@ -41,7 +41,12 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
      * @dev Payer changing
      * @param _payer new address  
      */
-    event PayerChanging(address _payer);
+    event PayerAddressChanged(address _payer);
+    /**
+     * @dev Changing address of fee
+     * @param _feeAddress new address of the fee
+     */
+    event CommissionAddressChanged(address _feeAddress); 
 
     ///@dev errors
     error InvalidAddress();
@@ -74,7 +79,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     ///@dev admin address
     address public admin;
     ///@dev payer address
-    address public payer;
+    address public payer;  
     /// @dev payee's address => instance
     mapping(address => OpenStream) public streamInstances;
     /// @dev payee's address => true/false
@@ -273,11 +278,20 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     }
 
     ///@dev changing address of the payer
-    function changePayer(address _payer) public onlyAdmin {
+    function changePayerAddress(address _payer) public onlyAdmin {
         if (_payer == address(0)) revert InvalidAddress();
         if (_payer == payer) revert InvalidAddress();
         
         payer = _payer;
-        emit PayerChanging(_payer);
+        emit PayerAddressChanged(_payer);
+    }
+
+    ///@dev changing address of the commission
+    function changeCommissionAddress(address _feeAddress) public onlyAdmin {
+        if (_feeAddress == address(0)) revert InvalidAddress();
+        if (_feeAddress == admin) revert InvalidAddress();
+
+        admin = _feeAddress;
+        emit CommissionAddressChanged(admin);
     }
 }

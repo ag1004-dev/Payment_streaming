@@ -18,5 +18,7 @@ interface IStreamManager {
 
     function accumulation(address _payee) external view returns(uint256);
 
-    function changePayer(address _payer) external;
+    function changePayerAddress(address _payer) external;
+
+    function changeCommissionAddress(address _feeAddress) external;
 }

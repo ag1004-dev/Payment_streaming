@@ -34,6 +34,12 @@ __Deposit__ tokens:
 
 Shows __accumulated__ amount in USDT or USDC:  
   `accumulation();`  
+
+Changing address of the __payer__:  
+  `changePayerAddress();`  
+
+Changing address of the __commission__:  
+  `changeCommissionAddress();`  
 ### Hint :
 ```plaintext
     // .env.example
