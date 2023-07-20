@@ -1,0 +1,9 @@
+// deployed contracts' addresses
+network = "mumbai"
+MockUSDT = 0x17896eD288A0aE8a604b859bc3FdB4f3f9102e0a
+StreamManager = 0xd34541599Eb965a5EF715725f48b285DA9E34d6F
+
+// on Sepolia
+network = "sepolia"
+MockUSDT = 0xbD5c488B5C9E3FCcDf95c9073e5747C2e6e1e6Ff
+StreamManager = 0x30a78896389bA398eEA7551641220a16e3Dd45D3
