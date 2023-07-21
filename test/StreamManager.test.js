@@ -50,7 +50,7 @@ describe("StreamManager:", function () {
   // Tests for `createOpenStream();`
   // Creating stream
   it('Creating an open stream instance succeed;', async () => {
-    await expect(this.streamManager.createOpenStream(
+    await expect(this.streamManager.connect(this.payer).createOpenStream(
       this.payee1.address,
       this.mockUSDT.address,
       this.rate,
@@ -58,14 +58,14 @@ describe("StreamManager:", function () {
       this.cliffPeriod
     ))
     .to.emit(this.streamManager, "StreamCreated")
-    .withArgs(this.admin.address, this.payee1.address)
+    .withArgs(this.payer.address, this.payee1.address)
   })
 
   // Expecting revert with `InvalidAddress`
   it('Creating open stream instance: `_payee` and `_token` are not set as address(0);', async () => {
     // Setting `_payee` = address(0)
     await expect(
-      this.streamManager.createOpenStream(
+      this.streamManager.connect(this.payer).createOpenStream(
         this.zero,
         this.mockUSDT.address,
         this.rate,
@@ -76,7 +76,7 @@ describe("StreamManager:", function () {
 
     // Setting `_token` = address(0)
     await expect(
-      this.streamManager.createOpenStream(
+      this.streamManager.connect(this.payer).createOpenStream(
         this.payee1.address,
         this.zero,
         this.rate,
@@ -90,7 +90,7 @@ describe("StreamManager:", function () {
   it('Creating an open stream instance: `_rate`, `_terminationPeriod`, `_cliffPeriod` not set how 0;', async () => {
     // Setting `_rate` = 0
     await expect(
-      this.streamManager.createOpenStream(
+      this.streamManager.connect(this.payer).createOpenStream(
         this.payee1.address,
         this.mockUSDT.address,
         0,
@@ -101,7 +101,7 @@ describe("StreamManager:", function () {
 
     // Setting `_terminationPeriod` = 0
     await expect(
-      this.streamManager.createOpenStream(
+      this.streamManager.connect(this.payer).createOpenStream(
         this.payee1.address,
         this.mockUSDT.address,
         this.rate,
@@ -112,7 +112,7 @@ describe("StreamManager:", function () {
 
     // Setting `_cliffPeriod` = 0
     await expect(
-      this.streamManager.createOpenStream(
+      this.streamManager.connect(this.payer).createOpenStream(
         this.payee1.address,
         this.mockUSDT.address,
         this.rate,
@@ -124,7 +124,7 @@ describe("StreamManager:", function () {
 
   // Expecting revert with `OpenStreamExists`
   it('Creating open stream instance: Previous stream has not been ended', async () => {
-    await expect(this.streamManager.createOpenStream(
+    await expect(this.streamManager.connect(this.payer).createOpenStream(
       this.payee1.address,
       this.mockUSDT.address,
       this.rate,
@@ -250,7 +250,7 @@ describe("StreamManager:", function () {
     await this.mockUSDT.mint(this.streamManager.address, 100)
 
     // Creating stream
-    await this.streamManager.createOpenStream(
+    await this.streamManager.connect(this.payer).createOpenStream(
         this.payee2.address,
         this.mockUSDT.address,
         this.rate,
@@ -290,7 +290,7 @@ describe("StreamManager:", function () {
 
   it('Creating next open stream instance fails: previous open stream has terminated, but payee can still claim(still in termination period)', async () => {
     // Creates first open stream
-    await this.streamManager.createOpenStream(
+    await this.streamManager.connect(this.payer).createOpenStream(
       this.payee5.address,
       this.mockUSDT.address,
       this.rate,
@@ -303,7 +303,7 @@ describe("StreamManager:", function () {
     await this.streamManager.connect(this.payer).terminate(this.payee5.address)
 
     await expect(
-      this.streamManager.createOpenStream(
+      this.streamManager.connect(this.payer).createOpenStream(
         this.payee5.address,
         this.mockUSDT.address,
         this.rate,
@@ -317,7 +317,7 @@ describe("StreamManager:", function () {
   it('Creating next stream instance fails: Previous stream has been ended, but has balance', async () => {
     await time.increase(20 * 24 * 3600); // + 20 days
 
-    await expect(this.streamManager.createOpenStream(
+    await expect(this.streamManager.connect(this.payer).createOpenStream(
       this.payee5.address,
       this.mockUSDT.address,
       this.rate,
@@ -330,7 +330,7 @@ describe("StreamManager:", function () {
     await time.increase(20 * 24 * 3600); // + 20 days
 
     await expect(
-      this.streamManager.createOpenStream(
+      this.streamManager.connect(this.payer).createOpenStream(
         this.payee6.address,
         this.mockUSDT.address,
         this.rate,
@@ -338,7 +338,7 @@ describe("StreamManager:", function () {
         this.cliffPeriod
       )
     ).to.emit(this.streamManager, "StreamCreated")
-    .withArgs(this.admin.address, this.payee6.address);
+    .withArgs(this.payer.address, this.payee6.address);
   })
 
   // Expecting revert with `NotPayee`
@@ -349,7 +349,7 @@ describe("StreamManager:", function () {
   // Expecting revert with `CliffPeriodIsNotEnded`
   it('Claim: cliff period is not ended;', async () => {
     // Creating stream
-    await this.streamManager.createOpenStream(
+    await this.streamManager.connect(this.payer).createOpenStream(
         this.payee3.address,
         this.mockUSDT.address,
         this.rate,
@@ -363,7 +363,7 @@ describe("StreamManager:", function () {
   // Expecting revert with `ReentrancyGuardReentrantCall`
   it("Сlaim: if reentrant call is detected;", async () => {
     // Create the open stream
-    await this.streamManager.createOpenStream(
+    await this.streamManager.connect(this.payer).createOpenStream(
       this.payee4.address,
       this.mockUSDT.address,
       this.amount,

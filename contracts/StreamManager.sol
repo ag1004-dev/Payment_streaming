@@ -164,7 +164,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         uint256 _rate,
         uint256 _terminationPeriod,
         uint256 _cliffPeriod
-    ) external {
+    ) external onlyPayer {
         if (_payee == address(0) || _token == address(0)) revert InvalidAddress();
         if (_rate == 0 || _terminationPeriod == 0 || _cliffPeriod == 0)
             revert InvalidValue();
