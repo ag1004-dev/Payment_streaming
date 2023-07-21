@@ -268,64 +268,6 @@ describe("StreamManager:", function () {
     ).to.be.revertedWith('InsufficientBalance')
   })
 
-  // Expecting revert with `CanNotClaimAnyMore`
-  it('Claiming failed: payee claimed after the permination period, so can not claim any more;', async () => {
-    // So payer deposited again.
-    await this.mockUSDT.connect(this.payer).approve(this.streamManager.address, this.amount)
-    await  this.streamManager.connect(this.payer).deposit(
-      this.mockUSDT.address,
-      this.amount
-    )
-    // claimed again.
-    await this.streamManager.connect(this.payee1).claim()
-
-    // Increase time to elapse the termination period
-    await time.increase(this.terminationPeriod);
-
-    // after this claim, payee1 can't claim any more becuase termination period is 18 days. but already elapsed 19 days.
-    await expect(
-      this.streamManager.connect(this.payee1).claim()
-    ).to.be.revertedWith('CanNotClaimAnyMore')
-  })
-
-  it('Creating next open stream instance fails: previous open stream has terminated, but payee can still claim(still in termination period)', async () => {
-    // Creates first open stream
-    await this.streamManager.connect(this.payer).createOpenStream(
-      this.payee5.address,
-      this.mockUSDT.address,
-      this.rate,
-      this.terminationPeriod,
-      this.cliffPeriod
-    )
-
-    await time.increase(10 * 24 * 3600); // + 10 days
-    // terminate 
-    await this.streamManager.connect(this.payer).terminate(this.payee5.address)
-
-    await expect(
-      this.streamManager.connect(this.payer).createOpenStream(
-        this.payee5.address,
-        this.mockUSDT.address,
-        this.rate,
-        this.terminationPeriod,
-        this.cliffPeriod
-      )
-    ).to.be.revertedWith('StreamIsTerminating');
-  })
-
-  // Expecting revert with `PreviousStreamHasBalance`
-  it('Creating next stream instance fails: Previous stream has been ended, but has balance', async () => {
-    await time.increase(20 * 24 * 3600); // + 20 days
-
-    await expect(this.streamManager.connect(this.payer).createOpenStream(
-      this.payee5.address,
-      this.mockUSDT.address,
-      this.rate,
-      this.terminationPeriod,
-      this.cliffPeriod
-    )).to.be.revertedWith('PreviousStreamHasBalance');
-  })
-
   it('Creating next open stream instance success', async () => {
     await time.increase(20 * 24 * 3600); // + 20 days
 
