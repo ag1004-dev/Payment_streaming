@@ -56,7 +56,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     error NotPayee();
     error NotAdmin();
     error InsufficientBalance();
-    error AlreadyTerminatedOrTerminating();
+    error Terminating();
     error AlreadyTerminated();
     error OpenStreamExists();
 
@@ -107,13 +107,6 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         _;
     }
 
-    ///@dev check if it's terminated or not
-    modifier notTerminated {
-        if (streamInstances[msg.sender].isTerminated)
-            revert AlreadyTerminated();
-        _;
-    }
-
     ///@dev check if the admin is
     modifier onlyAdmin {
         if (msg.sender != admin) revert NotAdmin();
@@ -129,7 +122,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     }
 
     ///@dev it gets token balance of the smart contract.
-    function getTokenBanance(address _token) private view returns (uint256) {
+    function getTokenBalance(address _token) private view returns (uint256) {
         return IERC20(_token).balanceOf(address(this));
     }
 
@@ -172,9 +165,9 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
 
     ///@dev payee can claim tokens which is proportional to elapsed time (exactly seconds).
     function claim()
+        nonReentrant
         onlyPayee
         onlyAfterCliffPeriod
-        nonReentrant
         external
     {
         uint256 claimedAt = block.timestamp;
@@ -193,7 +186,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
             isPayee[msg.sender] = false;
         }
 
-        uint256 balance = getTokenBanance(token);
+        uint256 balance = getTokenBalance(token);
         uint256 protocolFee = claimableAmount / 10;
         if (balance < claimableAmount + protocolFee) revert InsufficientBalance();
 
@@ -210,11 +203,11 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
      * @dev terminate the stream instance
      * @param _payee payee's address
      */
-    function terminate(address _payee) external onlyPayer notTerminated {
+    function terminate(address _payee) external onlyPayer {
         uint256 terminatedAt = block.timestamp;
         OpenStream storage streamInstance = streamInstances[_payee];
         if (!isPayee[_payee]) revert NotPayee();
-        if (streamInstance.terminatedAt != 0) revert AlreadyTerminatedOrTerminating();
+        if (streamInstance.terminatedAt != 0) revert Terminating();
         /// Terminate in cliff period
         if (streamInstance.createdAt + streamInstance.cliffPeriod >= block.timestamp)
             isPayee[_payee] = false;
@@ -247,7 +240,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         bool isTerminated = streamInstance.isTerminated;
         uint256 terminatedAt = streamInstance.terminatedAt;
         uint256 terminationPeriod = streamInstance.terminationPeriod;
-        if (!isTerminated || (isTerminated && block.timestamp <= terminatedAt + terminationPeriod)) {
+        if (!isTerminated || (isTerminated && block.timestamp < terminatedAt + terminationPeriod)) {
             amount = calculate(_payee, block.timestamp);
         } else {
             amount = calculate(_payee, terminatedAt + terminationPeriod);
