@@ -12,6 +12,10 @@ async function main() {
   const StreamManager = await ethers.getContractFactory("StreamManager");
   const streamManager = await StreamManager.deploy("0xa074577Ad65Ea0E17c64Dd3A1AB51a284055b757")
   console.log("StreamManager Address: ", streamManager.address);
+
+  const MaliciousToken = await ethers.getContractFactory("MaliciousToken");
+  const maliciousToken = await MaliciousToken.deploy(streamManager.address)
+  console.log("MaliciousToken Address: ", maliciousToken.address);
 }
 
 main()

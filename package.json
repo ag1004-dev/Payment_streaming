@@ -6,7 +6,8 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "npx hardhat compile && npx hardhat test",
-    "coverage": "npx hardhat coverage"
+    "coverage": "npx hardhat coverage",
+    "deploy:testnet": "npx hardhat run .\/scripts\/deploy.js --network sepolia"
   },
   "author": "",
   "license": "ISC",
