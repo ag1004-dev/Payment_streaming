@@ -10,7 +10,7 @@ async function main() {
   console.log("MockUSDT Address: ", mockUSDT.address);
 
   const StreamManager = await ethers.getContractFactory("StreamManager");
-  const streamManager = await StreamManager.deploy("0xa074577Ad65Ea0E17c64Dd3A1AB51a284055b757")
+  const streamManager = await StreamManager.deploy(process.env.ADMIN_ADDRESS, process.env.PAYER_ADDRESS)
   console.log("StreamManager Address: ", streamManager.address);
 
   const MaliciousToken = await ethers.getContractFactory("MaliciousToken");

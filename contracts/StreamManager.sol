@@ -39,14 +39,14 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     event TokensDeposited(address _token, uint256 _amount);
     /**
      * @dev Payer changing
-     * @param _payer new address  
+     * @param _payer new address
      */
     event PayerAddressChanged(address _payer);
     /**
      * @dev Changing address of fee
      * @param _feeAddress new address of the fee
      */
-    event CommissionAddressChanged(address _feeAddress); 
+    event CommissionAddressChanged(address _feeAddress);
 
     ///@dev errors
     error InvalidAddress();
@@ -75,31 +75,31 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     ///@dev admin address
     address public admin;
     ///@dev payer address
-    address public payer;  
+    address public payer;
     /// @dev payee's address => instance
     mapping(address => OpenStream) public streamInstances;
     /// @dev payee's address => true/false
     mapping(address => bool) public isPayee;
 
-    constructor(address _payer) {
+    constructor(address _admin, address _payer) {
+        admin = _admin;
         payer = _payer;
-        admin = msg.sender;
     }
 
     ///@dev check if the caller is payer
-    modifier onlyPayer {
+    modifier onlyPayer() {
         if (payer != msg.sender) revert NotPayer();
         _;
     }
 
     ///@dev check if the payee is
-    modifier onlyPayee {
+    modifier onlyPayee() {
         if (!isPayee[msg.sender]) revert NotPayee();
         _;
     }
 
     ///@dev check if the cliff period is ended
-    modifier onlyAfterCliffPeriod {
+    modifier onlyAfterCliffPeriod() {
         uint256 createdAt = streamInstances[msg.sender].createdAt;
         uint256 cliffPeriod = streamInstances[msg.sender].cliffPeriod;
         if (block.timestamp <= createdAt + cliffPeriod)
@@ -108,16 +108,20 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     }
 
     ///@dev check if the admin is
-    modifier onlyAdmin {
+    modifier onlyAdmin() {
         if (msg.sender != admin) revert NotAdmin();
         _;
     }
 
     ///@dev it calculates claimable amount.
-    function calculate(address _payee, uint256 _claimedAt) private view returns (uint256) {
+    function calculate(
+        address _payee,
+        uint256 _claimedAt
+    ) private view returns (uint256) {
         unchecked {
-            uint256 elapsed = _claimedAt - streamInstances[_payee].lastClaimedAt;
-            return elapsed * streamInstances[_payee].rate / 30 / 24 / 3600;    
+            uint256 elapsed = _claimedAt -
+                streamInstances[_payee].lastClaimedAt;
+            return (elapsed * streamInstances[_payee].rate) / 30 / 24 / 3600;
         }
     }
 
@@ -141,7 +145,8 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         uint256 _terminationPeriod,
         uint256 _cliffPeriod
     ) external onlyPayer {
-        if (_payee == address(0) || _token == address(0)) revert InvalidAddress();
+        if (_payee == address(0) || _token == address(0))
+            revert InvalidAddress();
         if (_rate == 0 || _terminationPeriod == 0 || _cliffPeriod == 0)
             revert InvalidValue();
         if (isPayee[_payee]) revert OpenStreamExists();
@@ -155,8 +160,8 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
             _cliffPeriod,
             block.timestamp,
             block.timestamp + _cliffPeriod, // lastly claimed at
-            0,                              // terminated at
-            false                           // isTerminated
+            0, // terminated at
+            false // isTerminated
         );
         isPayee[_payee] = true;
 
@@ -164,12 +169,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     }
 
     ///@dev payee can claim tokens which is proportional to elapsed time (exactly seconds).
-    function claim()
-        nonReentrant
-        onlyPayee
-        onlyAfterCliffPeriod
-        external
-    {
+    function claim() external nonReentrant onlyPayee onlyAfterCliffPeriod {
         uint256 claimedAt = block.timestamp;
         OpenStream storage streamInstance = streamInstances[msg.sender];
         uint256 terminatedAt = streamInstance.terminatedAt;
@@ -178,17 +178,24 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         bool isTerminated = streamInstance.isTerminated;
         uint256 claimableAmount;
 
-        if (!isTerminated || (isTerminated && claimedAt < terminatedAt + terminationPeriod)) {
+        if (
+            !isTerminated ||
+            (isTerminated && claimedAt < terminatedAt + terminationPeriod)
+        ) {
             claimableAmount = calculate(msg.sender, claimedAt);
         } else {
             ///@dev after the stream finished, payee can claim tokens which is accumulated until the termination period and can't claim anymore.
-            claimableAmount = calculate(msg.sender, terminatedAt + terminationPeriod);
+            claimableAmount = calculate(
+                msg.sender,
+                terminatedAt + terminationPeriod
+            );
             isPayee[msg.sender] = false;
         }
 
         uint256 balance = getTokenBalance(token);
         uint256 protocolFee = claimableAmount / 10;
-        if (balance < claimableAmount + protocolFee) revert InsufficientBalance();
+        if (balance < claimableAmount + protocolFee)
+            revert InsufficientBalance();
 
         /// @dev send claimable tokens to payee
         IERC20(token).safeTransfer(msg.sender, claimableAmount);
@@ -209,14 +216,16 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
         if (!isPayee[_payee]) revert NotPayee();
         if (streamInstance.terminatedAt != 0) revert Terminating();
         /// Terminate in cliff period
-        if (streamInstance.createdAt + streamInstance.cliffPeriod >= block.timestamp)
-            isPayee[_payee] = false;
+        if (
+            streamInstance.createdAt + streamInstance.cliffPeriod >=
+            block.timestamp
+        ) isPayee[_payee] = false;
         streamInstance.isTerminated = true;
         streamInstance.terminatedAt = terminatedAt;
 
         emit StreamTerminated(_payee);
     }
-    
+
     /**
      * @dev deposit tokens
      * @param _token token's address
@@ -232,15 +241,20 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     }
 
     ///@dev shows accumulated amount in USDT or USDC
-    function accumulation(address _payee) public view returns(uint256 amount) {
+    function accumulation(address _payee) public view returns (uint256 amount) {
         OpenStream memory streamInstance = streamInstances[_payee];
         if (!isPayee[_payee]) return 0;
-        if (block.timestamp <= streamInstance.createdAt + streamInstance.cliffPeriod)
-            return 0;
+        if (
+            block.timestamp <=
+            streamInstance.createdAt + streamInstance.cliffPeriod
+        ) return 0;
         bool isTerminated = streamInstance.isTerminated;
         uint256 terminatedAt = streamInstance.terminatedAt;
         uint256 terminationPeriod = streamInstance.terminationPeriod;
-        if (!isTerminated || (isTerminated && block.timestamp < terminatedAt + terminationPeriod)) {
+        if (
+            !isTerminated ||
+            (isTerminated && block.timestamp < terminatedAt + terminationPeriod)
+        ) {
             amount = calculate(_payee, block.timestamp);
         } else {
             amount = calculate(_payee, terminatedAt + terminationPeriod);
@@ -251,7 +265,7 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     function changePayerAddress(address _payer) public onlyAdmin {
         if (_payer == address(0)) revert InvalidAddress();
         if (_payer == payer) revert InvalidAddress();
-        
+
         payer = _payer;
         emit PayerAddressChanged(_payer);
     }

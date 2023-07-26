@@ -1,4 +1,4 @@
-const { expect, assert } = require("chai");
+const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { time } = require("@nomicfoundation/hardhat-network-helpers");
 
@@ -24,7 +24,7 @@ describe("StreamManager:", function () {
 
     // Deploy StreamManager
     const StreamManager = await ethers.getContractFactory("StreamManager")
-    this.streamManager = await StreamManager.deploy(this.payer.address)
+    this.streamManager = await StreamManager.deploy(this.admin.address, this.payer.address)
 
     const MaliciousToken = await ethers.getContractFactory("MaliciousToken");
     this.maliciousToken = await MaliciousToken.deploy(this.streamManager.address);
@@ -45,7 +45,7 @@ describe("StreamManager:", function () {
     await expect(this.mockUSDT.mint(this.payer.address, amount))
       .to.emit(this.mockUSDT, "Minted")
       .withArgs(this.payer.address, amount)
-    
+
     await expect(this.mockUSDT.mint(this.payer.address, amount))
       .to.emit(this.mockUSDT, "Minted")
       .withArgs(this.payer.address, amount)
@@ -63,8 +63,8 @@ describe("StreamManager:", function () {
       this.terminationPeriod,
       this.cliffPeriod
     ))
-    .to.emit(this.streamManager, "StreamCreated")
-    .withArgs(this.payer.address, this.payee1.address)
+      .to.emit(this.streamManager, "StreamCreated")
+      .withArgs(this.payer.address, this.payee1.address)
   })
 
   // Expecting revert with NotPayer
@@ -94,8 +94,8 @@ describe("StreamManager:", function () {
     ).to.be.revertedWith('InvalidAddress');
   })
 
-   // Expecting revert with `InvalidAddress`
-   it('Creating open stream instance: `_token` is not set as address(0);', async () => {
+  // Expecting revert with `InvalidAddress`
+  it('Creating open stream instance: `_token` is not set as address(0);', async () => {
     // Setting `_token` = address(0)
     await expect(
       this.streamManager.connect(this.payer).createOpenStream(
@@ -169,11 +169,11 @@ describe("StreamManager:", function () {
 
     await expect(
       this.streamManager.connect(this.payer).deposit(
-      this.mockUSDT.address,
-      this.amount
-    ))
-    .to.emit(this.streamManager, "TokensDeposited")
-    .withArgs(this.mockUSDT.address, this.amount)
+        this.mockUSDT.address,
+        this.amount
+      ))
+      .to.emit(this.streamManager, "TokensDeposited")
+      .withArgs(this.mockUSDT.address, this.amount)
 
     expect(await this.mockUSDT.balanceOf(this.streamManager.address)).to.equal(this.amount)
   })
@@ -183,10 +183,10 @@ describe("StreamManager:", function () {
     // Setting `_token` = address(0)
     await expect(
       this.streamManager.connect(this.payer).deposit(
-      this.zero,
-      this.amount
-    ))
-    .to.be.revertedWith('InvalidAddress');
+        this.zero,
+        this.amount
+      ))
+      .to.be.revertedWith('InvalidAddress');
   })
 
   // Expecting revert with `InvalidValue`
@@ -194,10 +194,10 @@ describe("StreamManager:", function () {
     // Setting `_amount` = 0
     await expect(
       this.streamManager.connect(this.payer).deposit(
-      this.mockUSDT.address,
-      0
-    ))
-    .to.be.revertedWith('InvalidValue');
+        this.mockUSDT.address,
+        0
+      ))
+      .to.be.revertedWith('InvalidValue');
   })
 
   // Expecting revert with `NotPayer`
@@ -205,10 +205,10 @@ describe("StreamManager:", function () {
     // Calling from other address
     await expect(
       this.streamManager.connect(this.payee1).deposit(
-      this.mockUSDT.address,
-      this.amount
-    ))
-    .to.be.revertedWith('NotPayer');
+        this.mockUSDT.address,
+        this.amount
+      ))
+      .to.be.revertedWith('NotPayer');
   })
 
   // Returning 0, because the current timestamp is less than the sum of the stream creation time and the "cliff" period 
@@ -225,7 +225,7 @@ describe("StreamManager:", function () {
     await expect(
       this.streamManager.connect(this.payee3).claim()
     )
-    .to.be.revertedWith("NotPayee")
+      .to.be.revertedWith("NotPayee")
   })
 
   // Claiming USDT
@@ -238,8 +238,8 @@ describe("StreamManager:", function () {
     await expect(
       this.streamManager.connect(this.payee1).claim()
     )
-    .to.emit(this.streamManager, "TokensClaimed")
-    .withArgs(this.payee1.address, expectedAmount)
+      .to.emit(this.streamManager, "TokensClaimed")
+      .withArgs(this.payee1.address, expectedAmount)
   })
 
   // Expecting revert with `InsufficientBalance`
@@ -249,11 +249,11 @@ describe("StreamManager:", function () {
 
     // Creating stream
     await this.streamManager.connect(this.payer).createOpenStream(
-        this.payee2.address,
-        this.mockUSDT.address,
-        this.rate,
-        this.terminationPeriod,
-        this.cliffPeriod)
+      this.payee2.address,
+      this.mockUSDT.address,
+      this.rate,
+      this.terminationPeriod,
+      this.cliffPeriod)
 
     await time.increase(17 * 24 * 3600); // + 17 days
     // claimed after 17 days from terminated point
@@ -278,7 +278,7 @@ describe("StreamManager:", function () {
         this.cliffPeriod
       )
     ).to.emit(this.streamManager, "StreamCreated")
-    .withArgs(this.payer.address, this.payee6.address);
+      .withArgs(this.payer.address, this.payee6.address);
   })
 
   // Expecting revert with `NotPayee`
@@ -290,16 +290,16 @@ describe("StreamManager:", function () {
   it('Claim: cliff period is not ended;', async () => {
     // Creating stream
     await this.streamManager.connect(this.payer).createOpenStream(
-        this.payee3.address,
-        this.mockUSDT.address,
-        this.rate,
-        this.terminationPeriod,
-        this.cliffPeriod)
+      this.payee3.address,
+      this.mockUSDT.address,
+      this.rate,
+      this.terminationPeriod,
+      this.cliffPeriod)
 
     await expect(this.streamManager.connect(this.payee3).claim()
     ).to.be.revertedWith("CliffPeriodIsNotEnded");
   })
-  
+
   // Tests for `accumulation();`
   // Amount is accumulated
   it('Return accumulated amount;', async () => {
@@ -313,36 +313,36 @@ describe("StreamManager:", function () {
     const expectedAmount = Math.floor(claimablePeriod * this.rate / 30 / 24 / 3600)
     expect(accumulatedAmount).to.equal(expectedAmount)
   });
-  
+
   // Expecting revert with NotPayer
   it('Terminating failed: only payer can terminate;', async () => {
     await expect(
       this.streamManager.connect(this.payee2).terminate(this.payee1.address))
       .to.be.revertedWith('NotPayer')
   })
-  
+
   // Expecting revert with NotPayee
   it('Terminating failed: payer can terminate for only payee;', async () => {
     await expect(
       this.streamManager.connect(this.payer).terminate(this.payee5.address))
       .to.be.revertedWith('NotPayee')
   })
-  
+
   // Expecting success
   it('Terminating succeeding;', async () => {
     await expect(
       this.streamManager.connect(this.payer).terminate(this.payee1.address))
       .to.emit(this.streamManager, 'StreamTerminated')
       .withArgs(this.payee1.address)
-    })
-    
+  })
+
   // Expect revert with Terminating
   it('Terminating failed: stream is already terminated;', async () => {
     await expect(
       this.streamManager.connect(this.payer).terminate(this.payee1.address))
       .to.be.revertedWith('Terminating')
-    })
-  
+  })
+
   it('Claiming succeed for payee1;', async () => {
     const amount = this.amount * 100000
     await this.mockUSDT.mint(this.payer.address, amount)
@@ -362,8 +362,8 @@ describe("StreamManager:", function () {
     await expect(
       this.streamManager.connect(this.payee1).claim()
     )
-    .to.emit(this.streamManager, "TokensClaimed")
-    .withArgs(this.payee1.address, expectedAmount)
+      .to.emit(this.streamManager, "TokensClaimed")
+      .withArgs(this.payee1.address, expectedAmount)
   })
 
   it('Claiming succeed for payee6;', async () => {
@@ -384,8 +384,8 @@ describe("StreamManager:", function () {
     await expect(
       this.streamManager.connect(this.payee6).claim()
     )
-    .to.emit(this.streamManager, "TokensClaimed")
-    .withArgs(this.payee6.address, expectedAmount)
+      .to.emit(this.streamManager, "TokensClaimed")
+      .withArgs(this.payee6.address, expectedAmount)
   })
 
   // Expecting revert with `InsufficientBalance`
@@ -403,7 +403,7 @@ describe("StreamManager:", function () {
     expect(await this.streamManager.accumulation(this.payee5.address)).to.equal(0)
     expect(await this.streamManager.isPayee(this.payee5.address)).to.equal(false)
   })
-    
+
   it('should prevent reentrant calls', async () => {
     await this.streamManager.connect(this.payer).createOpenStream(
       this.payee5.address,
@@ -420,9 +420,9 @@ describe("StreamManager:", function () {
       this.streamManager.connect(this.payer).deposit(
         this.maliciousToken.address,
         this.amount
-    ))
-    .to.emit(this.streamManager, "TokensDeposited")
-    .withArgs(this.maliciousToken.address, this.amount)
+      ))
+      .to.emit(this.streamManager, "TokensDeposited")
+      .withArgs(this.maliciousToken.address, this.amount)
 
     // Try to claim the stream
     const elapsed = 2 * 24 * 3600
@@ -438,28 +438,28 @@ describe("StreamManager:", function () {
     await expect(
       this.streamManager.connect(this.admin).changePayerAddress(this.payee1.address)
     ).to.emit(this.streamManager, "PayerAddressChanged")
-    .withArgs(this.payee1.address);
+      .withArgs(this.payee1.address);
   })
 
   // Expecting revert with `NotAdmin`
   it('Change payer: only the admin can call the function', async () => {
     await expect(
       this.streamManager.connect(this.payee4).changePayerAddress(this.payee1.address)
-      ).to.be.revertedWith('NotAdmin')
+    ).to.be.revertedWith('NotAdmin')
   })
 
   // Expecting revert with `InvalidAddress`
   it('Change payer: not can setting address(0) how address of the payer', async () => {
     await expect(
       this.streamManager.connect(this.admin).changePayerAddress(this.zero)
-      ).to.be.revertedWith('InvalidAddress')
+    ).to.be.revertedWith('InvalidAddress')
   })
 
   // Expecting revert with `InvalidAddress`
   it('Change payer: existing address and new address must not match', async () => {
     await expect(
       this.streamManager.connect(this.admin).changePayerAddress(this.payee1.address)
-      ).to.be.revertedWith('InvalidAddress')
+    ).to.be.revertedWith('InvalidAddress')
   })
 
   // Tests for `changeCommissionAddress();`
@@ -468,27 +468,27 @@ describe("StreamManager:", function () {
     await expect(
       this.streamManager.connect(this.admin).changeCommissionAddress(this.payee1.address)
     ).to.emit(this.streamManager, "CommissionAddressChanged")
-    .withArgs(this.payee1.address);
+      .withArgs(this.payee1.address);
   })
 
   // Expecting revert with `NotAdmin`
   it('Chainge address fee: only the admin can call the function', async () => {
     await expect(
       this.streamManager.connect(this.payee4).changeCommissionAddress(this.payee1.address)
-      ).to.be.revertedWith('NotAdmin')
+    ).to.be.revertedWith('NotAdmin')
   })
 
   // Expecting revert with `InvalidAddress`
   it('Chainge address fee: not can setting address(0) how address of the admin', async () => {
     await expect(
       this.streamManager.connect(this.payee1).changeCommissionAddress(this.zero)
-      ).to.be.revertedWith('InvalidAddress')
+    ).to.be.revertedWith('InvalidAddress')
   })
 
   // Expecting revert with `InvalidAddress`
   it('Chainge address fee: existing address and new address must not match', async () => {
     await expect(
       this.streamManager.connect(this.payee1).changeCommissionAddress(this.payee1.address)
-      ).to.be.revertedWith('InvalidAddress')
+    ).to.be.revertedWith('InvalidAddress')
   })
 });
