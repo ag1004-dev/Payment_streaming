@@ -63,17 +63,6 @@ describe.only("StreamManager:", async () => {
 
 	describe("changePayerAddress();", async () => {
 		// Tests for `changePayerAddress();`
-		// Changing the address payer
-		it('Change address payer: address of the admin is changing', async () => {
-
-	    	const { admin, payee1, streamManager } = await loadFixture(getSignersAndDeployContracts)
-
-		    await expect(
-		      streamManager.connect(admin).changePayerAddress(payee1.address)
-		    ).to.emit(streamManager, "PayerAddressChanged")
-		    .withArgs(payee1.address);
-		})
-
 		// Expecting revert with `NotAdmin`
 		it('Change address payer: only the admin can call the function', async () => {
 
@@ -102,6 +91,16 @@ describe.only("StreamManager:", async () => {
 			await expect(
 				streamManager.connect(admin).changePayerAddress(payer.address)
 			).to.be.revertedWith('InvalidAddress')
+		})
+		// Changing the address payer
+		it('Change address payer: address of the admin is changing', async () => {
+
+	    	const { admin, payee1, streamManager } = await loadFixture(getSignersAndDeployContracts)
+
+		    await expect(
+		      streamManager.connect(admin).changePayerAddress(payee1.address)
+		    ).to.emit(streamManager, "PayerAddressChanged")
+		    .withArgs(payee1.address);
 		})
 	})
 
