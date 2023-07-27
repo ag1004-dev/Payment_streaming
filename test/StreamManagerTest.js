@@ -106,24 +106,18 @@ describe.only("StreamManager:", async () => {
 
 	describe("deposit();", async () => {
 		// Tests for `deposit();`
-  		// Deposit USDT(mock)
-		it('Deposit: depositing succeed;', async () => {
+		// Expecting revert with `NotPayer`
+		it('Deposit: only payer can call this function;', async () => {
 
-	    	const { payer, streamManager, mockUSDT } = await loadFixture(getSignersAndDeployContracts)
+	    	const { payee1, streamManager, mockUSDT } = await loadFixture(getSignersAndDeployContracts)
 
-			await mockUSDT.mint(payer.address, amount)
-
-			await mockUSDT.connect(payer).approve(streamManager.address, amount)
-
+			// Calling from other address
 			await expect(
-			  	streamManager.connect(payer).deposit(
-			  	mockUSDT.address,
-			  	amount
+				streamManager.connect(payee1).deposit(
+				mockUSDT.address,
+				amount
 			))
-			.to.emit(streamManager, "TokensDeposited")
-			.withArgs(mockUSDT.address, amount)
-
-			expect(await mockUSDT.balanceOf(streamManager.address)).to.equal(amount)
+		    .to.be.revertedWith('NotPayer');
 		})
 
 		// Expecting revert with `InvalidAddress`
@@ -154,18 +148,24 @@ describe.only("StreamManager:", async () => {
 			.to.be.revertedWith('InvalidValue');
 		})
 
-		// Expecting revert with `NotPayer`
-		it('Deposit: only payer can call this function;', async () => {
+		// Deposit USDT(mock)
+		it('Deposit: depositing succeed;', async () => {
 
-	    	const { payee1, streamManager, mockUSDT } = await loadFixture(getSignersAndDeployContracts)
+	    	const { payer, streamManager, mockUSDT } = await loadFixture(getSignersAndDeployContracts)
 
-			// Calling from other address
+			await mockUSDT.mint(payer.address, amount)
+
+			await mockUSDT.connect(payer).approve(streamManager.address, amount)
+
 			await expect(
-				streamManager.connect(payee1).deposit(
-				mockUSDT.address,
-				amount
+			  	streamManager.connect(payer).deposit(
+			  	mockUSDT.address,
+			  	amount
 			))
-		    .to.be.revertedWith('NotPayer');
+			.to.emit(streamManager, "TokensDeposited")
+			.withArgs(mockUSDT.address, amount)
+
+			expect(await mockUSDT.balanceOf(streamManager.address)).to.equal(amount)
 		})
 	})
 
