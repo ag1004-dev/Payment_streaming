@@ -8,7 +8,7 @@ async function getSignersAndDeployContracts() {
 
   // Deploy StreamManager
   const StreamManager = await ethers.getContractFactory("StreamManager");
-  const streamManager = await StreamManager.deploy(payer.address);
+  const streamManager = await StreamManager.deploy(admin.address, payer.address);
 
   // Deploy MockUSDT
   const MockUSDT = await ethers.getContractFactory("MockUSDT");

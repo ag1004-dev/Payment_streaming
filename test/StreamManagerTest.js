@@ -11,26 +11,14 @@ describe.only("StreamManager:", async () => {
     const zero = ethers.constants.AddressZero 
 
 	it("Checking fixtures", async () => {
-		await loadFixture(getSignersAndDeployContracts)
-
 	    // Returning the `decimals` for coverage*
 	    const { mockUSDT } = await loadFixture(getSignersAndDeployContracts)
+
 	    expect(await mockUSDT.decimals()).to.eq(6)
   	})
 	
 	describe("changeCommissionAddress();", async () => {
 		// Tests for `changeCommissionAddress();`
-		// Changing the address of the commission
-		it('Chainge address fee: address of the admin is changing', async () => {
-	    	
-	    	const { admin, payee1, streamManager } = await loadFixture(getSignersAndDeployContracts)
-
-		    await expect(
-		      streamManager.connect(admin).changeCommissionAddress(payee1.address)
-		    ).to.emit(streamManager, "CommissionAddressChanged")
-		    .withArgs(payee1.address);
-		})
-
 		// Expecting revert with `NotAdmin`
 		it('Chainge address fee: only the admin can call the function', async () => {
 
@@ -60,6 +48,16 @@ describe.only("StreamManager:", async () => {
 			await expect(
 				streamManager.connect(admin).changeCommissionAddress(admin.address)
 			).to.be.revertedWith('InvalidAddress')
+		})
+		// Changing the address of the commission
+		it('Chainge address fee: address of the admin is changing', async () => {
+	    	
+	    	const { admin, payee1, streamManager } = await loadFixture(getSignersAndDeployContracts)
+
+		    await expect(
+		      streamManager.connect(admin).changeCommissionAddress(payee1.address)
+		    ).to.emit(streamManager, "CommissionAddressChanged")
+		    .withArgs(payee1.address);
 		})
 	})
 
