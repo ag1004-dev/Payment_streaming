@@ -1,7 +1,10 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { time, loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
-const { getSignersAndDeployContracts } = require("./fixtures");
+const { getSignersAndDeployContracts, createdOpenStream } = require("./fixtures");
+
+const createOpenStreamAsPayee1 = () => createdOpenStream(0);
+const createOpenStreamAsPayee2 = () => createdOpenStream(1);
 
 describe.only("StreamManager:", async () => {
 	const amount = 1000
@@ -171,24 +174,6 @@ describe.only("StreamManager:", async () => {
 
 	describe("terminate();", async () => {
 		// Tests for `terminate();`
-		// Expecting success
-		it('Terminate: terminating succeed;', async () => {
-
-	    	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(getSignersAndDeployContracts)
-
-	    	// Creating stream
-		    await streamManager.connect(payer).createOpenStream(
-		        payee1.address,
-		        mockUSDT.address,
-		        rate,
-		        terminationPeriod,
-		        cliffPeriod)
-
-			await expect(
-				streamManager.connect(payer).terminate(payee1.address))
-			.to.emit(streamManager, 'StreamTerminated')
-			.withArgs(payee1.address)
-		})
 		// Expecting revert with `NotPayer``
 	  	it('Terminate: only the payer can terminate;', async () => {
 
@@ -198,18 +183,21 @@ describe.only("StreamManager:", async () => {
 	      		streamManager.connect(payee2).terminate(payee1.address))
 	      	.to.be.revertedWith('NotPayer')
 	  	})  
-		// Expect revert with `Terminating``
+		
+		// Expecting revert with `NotPayee``
+	  	it('Terminate: payee address only;', async () => {
+
+	    	const { admin, payer, streamManager } = await loadFixture(getSignersAndDeployContracts)
+
+	    	await expect(
+	      		streamManager.connect(payer).terminate(admin.address))
+	      	.to.be.revertedWith('NotPayee')
+	  	})
+
+	  	// Expect revert with `Terminating``
 		it('Terminate: stream is already terminated;', async () => {
 
-	    	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(getSignersAndDeployContracts)
-
-	    	// Creating stream
-		    await streamManager.connect(payer).createOpenStream(
-		        payee1.address,
-		        mockUSDT.address,
-		        rate,
-		        terminationPeriod,
-		        cliffPeriod)
+	    	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(createOpenStreamAsPayee1)
 
 		    await time.increase(4 * 24 * 3600); // + 4 days
 
@@ -222,29 +210,21 @@ describe.only("StreamManager:", async () => {
 	      	.to.be.revertedWith('Terminating')
 		})
 
-		// Expecting revert with `NotPayee``
-	  	it('Terminate: payee address only;', async () => {
+		// Expecting success
+		it('Terminate: terminating succeed;', async () => {
 
-	    	const { admin, payer, streamManager } = await loadFixture(getSignersAndDeployContracts)
+	    	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(createOpenStreamAsPayee1)
 
-	    	await expect(
-	      		streamManager.connect(payer).terminate(admin.address))
-	      	.to.be.revertedWith('NotPayee')
-	  	})
+			await expect(
+				streamManager.connect(payer).terminate(payee1.address))
+			.to.emit(streamManager, 'StreamTerminated')
+			.withArgs(payee1.address)
+		})
 
-	  	// Expecting revert with `InsufficientBalance`
-		it('Terminate: succeed in the cliff period', async () => {
+	  	// Expecting success in the cliff period
+		it('Terminate: terminating succeed in the cliff period;', async () => {
 
-	    	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(getSignersAndDeployContracts)
-
-			// Creating stream
-		    await streamManager.connect(payer).createOpenStream(
-		    	payee1.address,
-		    	mockUSDT.address,
-		    	rate,
-		    	terminationPeriod,
-		    	cliffPeriod
-		    )
+	    	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(createOpenStreamAsPayee1)
 
 		    await streamManager.connect(payer).terminate(payee1.address)
 		    expect(await streamManager.accumulation(payee1.address)).to.equal(0)
