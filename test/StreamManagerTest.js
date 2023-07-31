@@ -58,7 +58,7 @@ describe.only("StreamManager:", async () => {
 	    	const { admin, payee1, streamManager } = await loadFixture(getSignersAndDeployContracts)
 
 		    await expect(
-		      streamManager.connect(admin).changeCommissionAddress(payee1.address)
+		      	streamManager.connect(admin).changeCommissionAddress(payee1.address)
 		    ).to.emit(streamManager, "CommissionAddressChanged")
 		    .withArgs(payee1.address);
 		})
@@ -234,46 +234,10 @@ describe.only("StreamManager:", async () => {
 
 	describe("accumulation();", async () => {
 		// Tests for `accumulation();`
-		// Amount is accumulated
-		it('Accumulation: returning the amount;', async () => {
-
-	    	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(getSignersAndDeployContracts)
-
-	    	// Creating stream
-		    await streamManager.connect(payer).createOpenStream(
-		    	payee1.address,
-		    	mockUSDT.address,
-		    	rate,
-		    	terminationPeriod,
-		    	cliffPeriod
-		    )
-
-		    await time.increase(44 * 24 * 3600); // + 44 days
-
-		    // Setting timestamp
-			const currentTimestamp = 44 * 24 * 3600
-		    const claimablePeriod = currentTimestamp - cliffPeriod
-
-		    // Calling the `accumulation();`
-		    const accumulatedAmount = await streamManager.accumulation(payee1.address)
-		    // Calculating expected amount
-		    const expectedAmount = Math.floor(claimablePeriod * rate / 30 / 24 / 3600)
-		    expect(accumulatedAmount).to.equal(expectedAmount)
-		});
-
 		// Returning 0, because the current timestamp is less than the sum of the stream creation time and the "cliff" period 
 		it('Accumulation: timestamp not less than the sum of the stream creation time and the "cliff" period;', async () => {
 
-	    	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(getSignersAndDeployContracts)
-
-	    	// Creating stream
-		    await streamManager.connect(payer).createOpenStream(
-		    	payee1.address,
-		    	mockUSDT.address,
-		    	rate,
-		    	terminationPeriod,
-		    	cliffPeriod
-		    )
+	    	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(createOpenStreamAsPayee1)
 
 		    // Calling the `accumulation();`
 		    const accumulatedAmount = await streamManager.accumulation(payee1.address)
@@ -292,19 +256,28 @@ describe.only("StreamManager:", async () => {
 		    expect(accumulatedAmount).to.equal(0)
 		})
 
+		// Amount is accumulated
+		it('Accumulation: returning the amount;', async () => {
+
+	    	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(createOpenStreamAsPayee1)
+
+		    await time.increase(44 * 24 * 3600); // + 44 days
+
+		    // Setting timestamp
+			const currentTimestamp = 44 * 24 * 3600
+		    const claimablePeriod = currentTimestamp - cliffPeriod
+
+		    // Calling the `accumulation();`
+		    const accumulatedAmount = await streamManager.accumulation(payee1.address)
+		    // Calculating expected amount
+		    const expectedAmount = Math.floor(claimablePeriod * rate / 30 / 24 / 3600)
+		    expect(accumulatedAmount).to.equal(expectedAmount)
+		});
+
 		// Returning the amount if stream to not terminated
-		it('Accumulation: stream not terminated', async () => {
+		it('Accumulation: stream not terminated;', async () => {
 
-		  	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(getSignersAndDeployContracts)
-
-			// Creating stream
-			await streamManager.connect(payer).createOpenStream(
-			    payee1.address,
-			    mockUSDT.address,
-			    rate,
-			    terminationPeriod,
-			    cliffPeriod
-			);
+		  	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(createOpenStreamAsPayee1)
 
 			await time.increase(44 * 24 * 3600); // + 44 days
 
@@ -320,18 +293,9 @@ describe.only("StreamManager:", async () => {
 		})
 
 		// Returning the amount if stream to terminated
-		it('Accumulation: stream terminated', async () => {
+		it('Accumulation: stream terminated;', async () => {
 
-		  	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(getSignersAndDeployContracts)
-
-			// Creating stream
-			await streamManager.connect(payer).createOpenStream(
-			    payee1.address,
-			    mockUSDT.address,
-			    rate,
-			    terminationPeriod,
-			    cliffPeriod
-			);
+		  	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(createOpenStreamAsPayee1)
   
 			await time.increase(44 * 24 * 3600); // + 44 days
 
