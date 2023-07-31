@@ -316,22 +316,6 @@ describe.only("StreamManager:", async () => {
 
 	describe("createOpenStream();", async () => {
 		// Tests for `createOpenStream();`
-		// Creating stream
-		it('Creating stream: creating succeed;', async () => {
-
-		  	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(getSignersAndDeployContracts)
-
-		    await expect(streamManager.connect(payer).createOpenStream(
-		      	payee1.address,
-		      	mockUSDT.address,
-		      	rate,
-		      	terminationPeriod,
-		      	cliffPeriod
-		    ))
-		    .to.emit(streamManager, "StreamCreated")
-		    .withArgs(payer.address, payee1.address)
-		})
-
 		// Expecting revert with `NotPayer``
 		it('Creating stream: only the payer can create a stream;', async () => {
 
@@ -430,24 +414,31 @@ describe.only("StreamManager:", async () => {
 		// Expecting revert with `OpenStreamExists`
 		it('Creating stream: previous stream has not been ended', async () => {
 
-		  	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(getSignersAndDeployContracts)
-
-		  	// Creating stream
-			await streamManager.connect(payer).createOpenStream(
-			    payee1.address,
-			    mockUSDT.address,
-			    rate,
-			    terminationPeriod,
-			    cliffPeriod
-			);
+		  	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(createOpenStreamAsPayee1)
 
 		    await expect(streamManager.connect(payer).createOpenStream(
-		      payee1.address,
-		      mockUSDT.address,
-		      rate,
-		      terminationPeriod,
-		      cliffPeriod
+		      	payee1.address,
+		      	mockUSDT.address,
+		      	rate,
+		      	terminationPeriod,
+		      	cliffPeriod
 		    )).to.be.revertedWith('OpenStreamExists');
+		})
+
+		// Creating stream
+		it('Creating stream: creating succeed;', async () => {
+
+		  	const { payer, payee1, streamManager, mockUSDT } = await loadFixture(getSignersAndDeployContracts)
+
+		    await expect(streamManager.connect(payer).createOpenStream(
+		      	payee1.address,
+		      	mockUSDT.address,
+		      	rate,
+		      	terminationPeriod,
+		      	cliffPeriod
+		    ))
+		    .to.emit(streamManager, "StreamCreated")
+		    .withArgs(payer.address, payee1.address)
 		})
 	})
 
@@ -490,11 +481,11 @@ describe.only("StreamManager:", async () => {
 
 		  	// Creating stream
 		    await streamManager.connect(payer).createOpenStream(
-		      payee1.address,
-		      maliciousToken.address,
-		      rate,
-		      terminationPeriod,
-		      cliffPeriod
+		      	payee1.address,
+		      	maliciousToken.address,
+		      	rate,
+		      	terminationPeriod,
+		      	cliffPeriod
 		    )
 
 		    // Minting tokens to `payer` and approve `streamManager contract`
@@ -523,7 +514,7 @@ describe.only("StreamManager:", async () => {
 		  	const { payer, streamManager } = await loadFixture(getSignersAndDeployContracts)
 
 		    await expect(
-		      streamManager.connect(payer).claim()
+		      	streamManager.connect(payer).claim()
 		    )
 		    .to.be.revertedWith("NotPayee")
 		})
@@ -621,7 +612,7 @@ describe.only("StreamManager:", async () => {
 		    expect(await streamManager.accumulation(payee1.address)).to.equal(expectedAmount)
 
 		    await expect(
-		      streamManager.connect(payee1).claim()
+		      	streamManager.connect(payee1).claim()
 		    )
 		    .to.emit(streamManager, "TokensClaimed")
 		    .withArgs(payee1.address, expectedAmount)
