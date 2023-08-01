@@ -7,9 +7,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract MaliciousToken is ERC20 {
     StreamManager streamManager;
 
-    constructor(StreamManager _streamManager)
-        ERC20("Mock USDT", "USDT")
-    {
+    bool internal disableClaim;
+
+    constructor(StreamManager _streamManager) ERC20("Mock USDT", "USDT") {
         streamManager = _streamManager;
     }
 
@@ -17,9 +17,18 @@ contract MaliciousToken is ERC20 {
         _mint(account, amount);
     }
 
-    function transfer(address recipient, uint256 amount) public override returns (bool) {
+    function setClaim() public {
+        disableClaim = true;
+    }
+
+    function transfer(
+        address recipient,
+        uint256 amount
+    ) public override returns (bool) {
         super.transfer(recipient, amount);
-        streamManager.claim();
+        if (!disableClaim) {
+            streamManager.claim();
+        }
         return true;
     }
 }
