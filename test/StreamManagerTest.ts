@@ -768,15 +768,14 @@ describe.only("StreamManager:", async () => {
         .connect(payer)
         .deposit(mockUSDT.getAddress(), amountNew);
 
+      await time.increase(terminationPeriod + 1); // 18 days + 1 sec
       // Terminating the stream
       streamManager.connect(payer).terminate(payee2.address);
-      await time.increase(terminationPeriod + 1); // 18 days + 1 sec
 
       const expectedAmount = await streamManager.accumulation(payee2.address);
 
       // Calling the `claim();`
       // `if (isTerminated && claimedAt < terminatedAt + terminationPeriod)`
-      console.log("123123");
       await expect(streamManager.connect(payee2).claim())
         .to.emit(streamManager, "TokensClaimed")
         .withArgs(payee2.address, expectedAmount);
