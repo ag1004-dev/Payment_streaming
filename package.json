@@ -7,7 +7,7 @@
     "compile": "hardhat compile",
     "test": "npx hardhat compile && npx hardhat test",
     "coverage": "npx hardhat coverage",
-    "deploy:testnet": "npx hardhat run .\/scripts\/deploy.js --network sepolia"
+    "deploy:testnet": "npx hardhat run ./scripts/deploy.js --network sepolia"
   },
   "author": "",
   "license": "ISC",
@@ -16,12 +16,15 @@
     "@nomiclabs/hardhat-ethers": "^2.2.3",
     "@nomiclabs/hardhat-etherscan": "^3.1.7",
     "@nomiclabs/hardhat-waffle": "^2.0.6",
-    "@openzeppelin/contracts": "^4.9.2",
-    "chai": "^4.3.7",
+    "@openzeppelin/hardhat-upgrades": "^2.4.1",
+    "chai": "^4.2.0",
     "dotenv": "^16.3.1",
     "solidity-coverage": "^0.8.4"
   },
   "devDependencies": {
-    "hardhat": "^2.6.2"
+    "hardhat": "^2.19.1",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@openzeppelin/contracts": "^5.0.0",
+    "@openzeppelin/contracts-upgradeable": "^5.0.0"
   }
 }
