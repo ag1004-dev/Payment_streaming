@@ -2,7 +2,6 @@
   "name": "payment-streaming",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "compile": "hardhat compile",
     "test": "npx hardhat compile && npx hardhat test",
@@ -11,19 +10,34 @@
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
-    "@nomiclabs/hardhat-ethers": "^2.2.3",
-    "@nomiclabs/hardhat-etherscan": "^3.1.7",
-    "@nomiclabs/hardhat-waffle": "^2.0.6",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "@openzeppelin/defender-admin-client": "^1.52.0",
     "@openzeppelin/hardhat-upgrades": "^2.4.1",
+    "@typechain/ethers-v6": "^0.5.0",
+    "@typechain/hardhat": "^9.0.0",
+    "@types/chai": "^4.2.0",
+    "@types/mocha": ">=9.1.0",
+    "@types/node": ">=16.0.0",
     "chai": "^4.2.0",
     "dotenv": "^16.3.1",
-    "solidity-coverage": "^0.8.4"
-  },
-  "devDependencies": {
+    "ethers": "^6.4.0",
     "hardhat": "^2.19.1",
-    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "hardhat-gas-reporter": "^1.0.8",
+    "prettier": "^3.1.0",
+    "prettier-plugin-solidity": "^1.2.0",
+    "solhint": "^4.0.0",
+    "solidity-coverage": "^0.8.0",
+    "ts-node": ">=8.0.0",
+    "tsconfig-paths": "^4.2.0",
+    "typechain": "^8.3.0",
+    "typescript": "^5.4.0-dev.20231125"
+  },
+  "dependencies": {
     "@openzeppelin/contracts": "^5.0.0",
     "@openzeppelin/contracts-upgradeable": "^5.0.0"
   }

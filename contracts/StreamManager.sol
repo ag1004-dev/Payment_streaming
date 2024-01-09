@@ -8,7 +8,6 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 
 import "../interfaces/IStreamManager.sol";
 import "./StreamManagerStorageV1.sol";
-
 import "hardhat/console.sol";
 
 contract StreamManager is
@@ -106,8 +105,6 @@ contract StreamManager is
 
     ///@dev proxy initializer
     function initialize(address _admin, address _payer) public initializer {
-        console.log("initialize");
-
         __ReentrancyGuard_init();
         __UUPSUpgradeable_init();
 

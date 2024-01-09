@@ -1,23 +1,33 @@
-const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
-const { ethers, upgrades } = require("hardhat");
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { getImplementationAddress } from "@openzeppelin/upgrades-core";
+import { ethers, upgrades } from "hardhat";
+import { Signers } from "types";
+import { StreamManager, StreamManager__factory } from "typechain-types";
 
 // Gitting addresses and return addresses
 // Deploying contracts and return addresses
-async function getSignersAndDeployContracts() {
+export async function getSignersAndDeployContracts() {
   const [admin, payer, payee1, payee2] = await ethers.getSigners();
 
   // Deploy StreamManager
-  const StreamManager = await ethers.getContractFactory("StreamManager");
-  console.log("Incre");
-  const streamManager = await upgrades.deployProxy(
+  const StreamManager: StreamManager__factory = <StreamManager__factory>(
+    await ethers.getContractFactory("StreamManager")
+  );
+  const streamManager = (await upgrades.deployProxy(
     StreamManager,
     [admin.address, payer.address],
     {
       kind: "uups",
       initializer: "initialize",
     }
+  )) as unknown as StreamManager;
+  const streamManagerImplAddress = await getImplementationAddress(
+    ethers.provider,
+    await streamManager.getAddress()
   );
-  console.log("Incre1");
+  const streamManagerImpl = StreamManager.attach(
+    streamManagerImplAddress
+  ) as StreamManager;
 
   // Deploy MockUSDT
   const MockUSDT = await ethers.getContractFactory("MockUSDT");
@@ -25,7 +35,9 @@ async function getSignersAndDeployContracts() {
 
   // Deploy MaliciousToken
   const MaliciousToken = await ethers.getContractFactory("MaliciousToken");
-  const maliciousToken = await MaliciousToken.deploy(streamManager.address);
+  const maliciousToken = await MaliciousToken.deploy(
+    streamManager.getAddress()
+  );
 
   return {
     admin,
@@ -33,19 +45,21 @@ async function getSignersAndDeployContracts() {
     payee1,
     payee2,
     streamManager,
+    streamManagerImpl,
     mockUSDT,
     maliciousToken,
   };
 }
 
 // Creating the stream
-async function createdOpenStream(param) {
+export async function createdOpenStream(param: number) {
   const {
     admin,
     payer,
     payee1,
     payee2,
     streamManager,
+    streamManagerImpl,
     mockUSDT,
     maliciousToken,
   } = await loadFixture(getSignersAndDeployContracts);
@@ -67,7 +81,7 @@ async function createdOpenStream(param) {
     .connect(payer)
     .createOpenStream(
       payee,
-      mockUSDT.address,
+      mockUSDT.getAddress(),
       rate,
       terminationPeriod,
       cliffPeriod
@@ -79,9 +93,8 @@ async function createdOpenStream(param) {
     payee1,
     payee2,
     streamManager,
+    streamManagerImpl,
     mockUSDT,
     maliciousToken,
   };
 }
-
-module.exports = { getSignersAndDeployContracts, createdOpenStream };
