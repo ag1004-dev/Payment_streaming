@@ -8,7 +8,6 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 
 import "../interfaces/IStreamManager.sol";
 import "./StreamManagerStorageV1.sol";
-import "hardhat/console.sol";
 
 contract StreamManager is
     Initializable,
