@@ -22,7 +22,7 @@ contract StreamManagerStorageV1 {
     mapping(address => OpenStream) public streamInstances;
     /// @dev payee's address => true/false
     mapping(address => bool) public isPayee;
-
+    /// @dev gap for further storage expansion
     uint256[64] private __gap__;
 }
 
