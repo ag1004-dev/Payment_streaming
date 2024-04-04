@@ -1,11 +1,21 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../interfaces/IStreamManager.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
-contract StreamManager is IStreamManager, ReentrancyGuard {
+import "../interfaces/IStreamManager.sol";
+import "./StreamManagerStorageV1.sol";
+
+contract StreamManager is
+    Initializable,
+    IStreamManager,
+    ReentrancyGuardUpgradeable,
+    UUPSUpgradeable,
+    StreamManagerStorage
+{
     using SafeERC20 for IERC20;
 
     /**
@@ -60,32 +70,6 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     error AlreadyTerminated();
     error OpenStreamExists();
 
-    struct OpenStream {
-        address payee;
-        address token;
-        uint256 rate;
-        uint256 terminationPeriod;
-        uint256 cliffPeriod;
-        uint256 createdAt;
-        uint256 lastClaimedAt;
-        uint256 terminatedAt;
-        bool isTerminated;
-    }
-
-    ///@dev admin address
-    address public admin;
-    ///@dev payer address
-    address public payer;
-    /// @dev payee's address => instance
-    mapping(address => OpenStream) public streamInstances;
-    /// @dev payee's address => true/false
-    mapping(address => bool) public isPayee;
-
-    constructor(address _admin, address _payer) {
-        admin = _admin;
-        payer = _payer;
-    }
-
     ///@dev check if the caller is payer
     modifier onlyPayer() {
         if (payer != msg.sender) revert NotPayer();
@@ -111,6 +95,20 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
     modifier onlyAdmin() {
         if (msg.sender != admin) revert NotAdmin();
         _;
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    ///@dev proxy initializer
+    function initialize(address _admin, address _payer) public initializer {
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
+
+        admin = _admin;
+        payer = _payer;
     }
 
     ///@dev it calculates claimable amount.
@@ -277,5 +275,15 @@ contract StreamManager is IStreamManager, ReentrancyGuard {
 
         admin = _feeAddress;
         emit CommissionAddressChanged(admin);
+    }
+
+    ///@dev default override for uups proxies
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyAdmin {}
+
+    ///@dev version
+    function version() public pure virtual returns (string memory) {
+        return "1.0.0";
     }
 }

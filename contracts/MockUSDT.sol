@@ -13,7 +13,7 @@ contract MockUSDT is ERC20, Ownable {
         string memory name,
         string memory symbol,
         uint8 decimals_
-    ) ERC20(name, symbol) {
+    ) ERC20(name, symbol) Ownable(msg.sender) {
         _decimals = decimals_;
     }
 

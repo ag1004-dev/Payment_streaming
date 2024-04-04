@@ -1,0 +1,216 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0x23414482493235D3382b9B1DBF8054832d0C6A69",
+      "txHash": "0x8fffed82c7ce144069677ebdd8e60801051dd19ac37d0887e70ae04dcfd664f6",
+      "kind": "uups"
+    },
+    {
+      "address": "0xEa5ed7a3Ea7b5EA066ffbf34f240E6cA23b1f19b",
+      "txHash": "0x61c21575f7f9724dc37d3d32aa4332b3338c05a86532a6f5e8264c3c355a7115",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "a490e2077e9a6178a6b60fa4376024b01484cd700870b4c84abcc25b4eb6e8f6": {
+      "address": "0x1D7a1d4f99085b24f866d039Bf9425Dd36146FE6",
+      "txHash": "0xebde0f360302df6b4cec17c9c7345abd8e663a9077b6286d8cce1db42aa39a3d",
+      "layout": {
+        "solcVersion": "0.8.21",
+        "storage": [
+          {
+            "label": "admin",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "StreamManagerStorageV1",
+            "src": "contracts\\StreamManagerStorageV1.sol:18"
+          },
+          {
+            "label": "payer",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "StreamManagerStorageV1",
+            "src": "contracts\\StreamManagerStorageV1.sol:20"
+          },
+          {
+            "label": "streamInstances",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_address,t_struct(OpenStream)3212_storage)",
+            "contract": "StreamManagerStorageV1",
+            "src": "contracts\\StreamManagerStorageV1.sol:22"
+          },
+          {
+            "label": "isPayee",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "StreamManagerStorageV1",
+            "src": "contracts\\StreamManagerStorageV1.sol:24"
+          },
+          {
+            "label": "__gap__",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_array(t_uint256)64_storage",
+            "contract": "StreamManagerStorageV1",
+            "src": "contracts\\StreamManagerStorageV1.sol:26"
+          }
+        ],
+        "types": {
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)10_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(ReentrancyGuardStorage)118_storage": {
+            "label": "struct ReentrancyGuardUpgradeable.ReentrancyGuardStorage",
+            "members": [
+              {
+                "label": "_status",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)64_storage": {
+            "label": "uint256[64]",
+            "numberOfBytes": "2048"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(OpenStream)3212_storage)": {
+            "label": "mapping(address => struct StreamManagerStorageV1.OpenStream)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(OpenStream)3212_storage": {
+            "label": "struct StreamManagerStorageV1.OpenStream",
+            "members": [
+              {
+                "label": "payee",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "token",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "rate",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "terminationPeriod",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "cliffPeriod",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "createdAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "lastClaimedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "terminatedAt",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "isTerminated",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "8"
+              }
+            ],
+            "numberOfBytes": "288"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.ReentrancyGuard": [
+            {
+              "contract": "ReentrancyGuardUpgradeable",
+              "label": "_status",
+              "type": "t_uint256",
+              "src": "@openzeppelin\\contracts-upgradeable\\utils\\ReentrancyGuardUpgradeable.sol:40",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
